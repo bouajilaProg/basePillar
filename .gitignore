@@ -37,6 +37,10 @@ pnpm-debug.log*
 coverage/
 .nyc_output/
 
+# Docusaurus
+.docusaurus/
+apps/docs/.docusaurus/
+
 # Misc
 *.tsbuildinfo
 .eslintcache
