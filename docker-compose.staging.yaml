@@ -32,6 +32,7 @@ services:
       PORT: 3000
       NODE_ENV: production
       COOKIE_SECURE: 'true'
+      FRONTEND_URL: http://localhost
       CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL:-}
     ports:
       - '3000:3000'
@@ -50,10 +51,18 @@ services:
       context: ./apps/frontend
       dockerfile: Dockerfile
     container_name: basepillar-frontend
-    environment:
-      VITE_API_URL: http://api:3000
     ports:
       - '80:80'
+    depends_on:
+      - api
+      - docs
+
+  # Docusaurus Docs
+  docs:
+    build:
+      context: ./apps/docs
+      dockerfile: Dockerfile
+    container_name: basepillar-docs
     depends_on:
       - api
 
