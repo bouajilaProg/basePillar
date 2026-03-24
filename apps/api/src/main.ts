@@ -38,8 +38,16 @@ async function bootstrap() {
   app.useGlobalFilters(new AppExceptionFilter(logger));
 
   // CORS configuration
+  const envOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    : [];
+  const defaultOrigins = ['http://localhost:5173', 'http://localhost'];
+  const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true,
   });
 
@@ -56,14 +64,14 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, { useGlobalPrefix: true });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
   logger.info('API Server started', {
     port,
-    docs: `http://localhost:${port}/docs`,
+    docs: '/api/docs',
     env: process.env.NODE_ENV || 'development',
   });
 }
