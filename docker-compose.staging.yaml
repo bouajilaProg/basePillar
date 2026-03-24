@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: basepillar-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: basepillar
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NestJS API Backend
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: basepillar-api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/basepillar
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 7d
+      PORT: 3000
+      NODE_ENV: production
+      COOKIE_SECURE: 'true'
+      CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL:-}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vite Frontend (Nginx)
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: basepillar-frontend
+    environment:
+      VITE_API_URL: http://api:3000
+    ports:
+      - '80:80'
+    depends_on:
+      - api
+
+  # Garage S3-compatible Storage
+  garage:
+    image: dxflrs/garage:v1.0.0
+    container_name: basepillar-garage
+    volumes:
+      - ./infrastructure/garage/garage.toml:/etc/garage.toml
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+    ports:
+      - '3900:3900' # S3 API
+      - '3902:3902' # Admin API
+    environment:
+      GARAGE_CONFIG_FILE: /etc/garage.toml
+
+volumes:
+  postgres_data:
+  garage_data:
+  garage_meta:
