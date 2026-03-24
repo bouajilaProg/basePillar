@@ -40,7 +40,9 @@ export const logToConsole = (
   metadata?: Record<string, unknown>
 ): void => {
   const timestamp = new Date().toISOString();
-  const prefix = `[${appName}] [${level.toUpperCase()}]`;
+  const envLabel =
+    typeof process !== 'undefined' && process?.env?.NODE_ENV === 'development' ? '[DEV] ' : '';
+  const prefix = `${envLabel}[${appName}] [${level.toUpperCase()}]`;
 
   // Check if we're in a browser environment (has CSS console support)
   const isBrowser = typeof globalThis !== 'undefined' && 'window' in globalThis;
