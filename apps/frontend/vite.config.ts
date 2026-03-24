@@ -23,6 +23,7 @@ export default defineConfig({
       '/docs': {
         target: docsProxyTarget,
         changeOrigin: true,
+        ws: true,
       },
     },
   },

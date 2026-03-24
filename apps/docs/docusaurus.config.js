@@ -3,8 +3,13 @@ const config = {
   tagline: 'API and platform documentation',
   url: 'http://localhost',
   baseUrl: '/docs/',
+  trailingSlash: false,
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
   favicon: 'img/favicon.ico',
 
   organizationName: 'basepillar',
