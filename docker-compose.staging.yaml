@@ -33,12 +33,14 @@ services:
       NODE_ENV: production
       COOKIE_SECURE: 'true'
       FRONTEND_URL: http://localhost
-      CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL:-}
+      CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL:-http://console:4000}
     ports:
       - '3000:3000'
     depends_on:
       postgres:
         condition: service_healthy
+      console:
+        condition: service_started
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
@@ -65,6 +67,18 @@ services:
     container_name: basepillar-docs
     depends_on:
       - api
+
+  # Centralized Logs Console
+  console:
+    build:
+      context: .
+      dockerfile: apps/console/Dockerfile
+    container_name: basepillar-console
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+    ports:
+      - '4000:4000'
 
   # Garage S3-compatible Storage
   garage:
