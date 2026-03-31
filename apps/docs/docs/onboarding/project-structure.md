@@ -32,6 +32,11 @@ This repository is a pnpm monorepo orchestrated with Turbo. The codebase is spli
   - Uses `docusaurus-theme-openapi-docs`
   - OpenAPI source synced by `scripts/sync-openapi.mjs`
 
+- `apps/console`: centralized log console service
+  - Receives logs via `POST /logs`
+  - Exposes in-memory log API at `GET /logs`
+  - Provides a lightweight UI at `http://localhost:4000/`
+
 ## Shared Packages (`packages/`)
 
 - `packages/types` (`@repo/types`): shared domain types, errors, DTO contracts
