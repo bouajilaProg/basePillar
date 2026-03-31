@@ -14,23 +14,26 @@ export interface JwtPayload {
   exp?: number;
 }
 
+interface AuthenticatedRequest extends Request {
+  user?: JwtPayload;
+}
+
 /**
  * JWT Auth Guard
  *
  * Custom guard that validates JWT tokens without Passport.js dependency.
  * Extracts token from HttpOnly cookie or Authorization header.
  *
- * Security benefits:
- * - HttpOnly cookies cannot be accessed by JavaScript (XSS protection)
- * - SameSite=strict prevents CSRF attacks
- * - Secure flag ensures HTTPS-only transmission
+ *   bil fale9i: middleware yji fil west y7el 
+ *   el token w y3adi el user ken fama mochkla
+ *   y9olek erja3 8odwa
  */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<Request>();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const token = this.extractToken(request);
 
     if (!token) {
