@@ -1,7 +1,10 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as bcrypt from 'bcrypt';
-import { users, organizations, memberships } from './schema';
+import { users } from './schema';
+// NOTE: Organizations and memberships are commented out for now
+// Will be replaced by filebase seeding
+// import { organizations, memberships } from './schema';
 
 /**
  * Database Seed Script
@@ -13,6 +16,9 @@ import { users, organizations, memberships } from './schema';
  * - Admin: admin@example.com / password123
  * - User 1: user1@example.com / password123
  * - User 2: user2@example.com / password123
+ *
+ * NOTE: Organization/membership seeding is commented out.
+ * Filebase seeding will be added once schema is implemented.
  */
 async function seed() {
   const connectionString = process.env.DATABASE_URL;
@@ -28,16 +34,18 @@ async function seed() {
   // Hash the default password
   const passwordHash = await bcrypt.hash('password123', 10);
 
-  // Create organization
-  const [org] = await db
-    .insert(organizations)
-    .values({
-      name: 'Acme Corp',
-      slug: 'acme-corp',
-    })
-    .returning();
-
-  console.log('✅ Created organization:', org.name);
+  // NOTE: Organization creation is commented out for now
+  // -----------------------------------------------
+  // // Create organization
+  // const [org] = await db
+  //   .insert(organizations)
+  //   .values({
+  //     name: 'Acme Corp',
+  //     slug: 'acme-corp',
+  //   })
+  //   .returning();
+  //
+  // console.log('✅ Created organization:', org.name);
 
   // Create admin user
   const [admin] = await db
@@ -72,20 +80,24 @@ async function seed() {
 
   console.log('✅ Created users:', user1.email, user2.email);
 
-  // Create memberships
-  await db.insert(memberships).values([
-    { userId: admin.id, organizationId: org.id, role: 'admin' },
-    { userId: user1.id, organizationId: org.id, role: 'member' },
-    { userId: user2.id, organizationId: org.id, role: 'member' },
-  ]);
-
-  console.log('✅ Created memberships');
+  // NOTE: Membership creation is commented out for now
+  // Will be replaced by filebase member seeding
+  // -----------------------------------------------
+  // // Create memberships
+  // await db.insert(memberships).values([
+  //   { userId: admin.id, organizationId: org.id, role: 'admin' },
+  //   { userId: user1.id, organizationId: org.id, role: 'member' },
+  //   { userId: user2.id, organizationId: org.id, role: 'member' },
+  // ]);
+  //
+  // console.log('✅ Created memberships');
 
   console.log('\n🎉 Seed complete!');
   console.log('\nDefault credentials:');
   console.log('  Admin: admin@example.com / password123');
   console.log('  User 1: user1@example.com / password123');
   console.log('  User 2: user2@example.com / password123');
+  console.log('\nNOTE: Filebase creation is done via API after login.');
 
   await client.end();
   process.exit(0);
