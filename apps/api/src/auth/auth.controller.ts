@@ -24,8 +24,10 @@ export class AuthController {
   /**
    * Register a new user
    *
-   * Creates user + organization + admin membership.
+   * Creates user only - filebase creation is handled separately.
    * Sets JWT token in HttpOnly cookie.
+   *
+   * NOTE: Organization/membership logic is commented out.
    */
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
@@ -38,7 +40,8 @@ export class AuthController {
 
     return {
       user: result.user,
-      organization: result.organization,
+      // NOTE: Organization is commented out - will be replaced by filebase
+      // organization: result.organization,
     };
   }
 
@@ -46,6 +49,8 @@ export class AuthController {
    * Login user
    *
    * Validates credentials and sets JWT token in HttpOnly cookie.
+   *
+   * NOTE: Organizations are commented out - will be replaced by filebases.
    */
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
@@ -58,7 +63,8 @@ export class AuthController {
 
     return {
       user: result.user,
-      organizations: result.organizations,
+      // NOTE: Organizations are commented out - will be replaced by filebases
+      // organizations: result.organizations,
     };
   }
 
@@ -86,6 +92,8 @@ export class AuthController {
    *
    * Returns the authenticated user's profile.
    * Requires valid JWT cookie.
+   *
+   * NOTE: Organizations are commented out - will be replaced by filebases.
    */
   @Get('me')
   @UseGuards(JwtAuthGuard)
