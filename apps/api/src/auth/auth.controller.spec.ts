@@ -13,6 +13,9 @@ import { AuthService } from './auth.service';
  * 3. Guard integration - protected routes must reject unauthenticated requests
  * 4. DTO validation pipeline - malformed requests must be rejected
  *
+ * NOTE: Organization/membership tests are commented out for now.
+ * These will be replaced by filebase tests once implemented.
+ *
  * Testing strategy:
  * - Mock AuthService to isolate controller logic
  * - Verify cookie settings for security
@@ -60,12 +63,12 @@ describe('AuthController', () => {
     };
 
     /**
-     * WHY: Successful registration must return user and organization
+     * WHY: Successful registration must return user
+     * NOTE: Organization is commented out - will be replaced by filebase
      */
-    it('should return user and organization on successful registration', async () => {
+    it('should return user on successful registration', async () => {
       const serviceResult = {
         user: { id: 'user-1', email: 'test@example.com', name: 'Test User' },
-        organization: { id: 'org-1', name: 'Test Org', slug: 'test' },
         token: 'jwt-token',
       };
       mockAuthService.register.mockResolvedValue(serviceResult);
@@ -74,7 +77,6 @@ describe('AuthController', () => {
 
       expect(result).toEqual({
         user: serviceResult.user,
-        organization: serviceResult.organization,
       });
     });
 
@@ -85,7 +87,6 @@ describe('AuthController', () => {
     it('should set HttpOnly cookie with JWT token', async () => {
       mockAuthService.register.mockResolvedValue({
         user: { id: '1', email: 'test@example.com', name: 'Test' },
-        organization: { id: 'org', name: 'Org', slug: 'org' },
         token: 'jwt-token-123',
       });
 
@@ -108,13 +109,28 @@ describe('AuthController', () => {
     it('should not include token in response body', async () => {
       mockAuthService.register.mockResolvedValue({
         user: { id: '1', email: 'test@example.com', name: 'Test' },
-        organization: { id: 'org', name: 'Org', slug: 'org' },
         token: 'secret-token',
       });
 
       const result = await controller.register(registerDto, mockResponse as Response);
 
       expect(result).not.toHaveProperty('token');
+    });
+
+    /**
+     * WHY: User data structure must be correct
+     */
+    it('should return user with id, email, and name', async () => {
+      mockAuthService.register.mockResolvedValue({
+        user: { id: 'user-123', email: 'new@example.com', name: 'New User' },
+        token: 'token',
+      });
+
+      const result = await controller.register(registerDto, mockResponse as Response);
+
+      expect(result.user).toHaveProperty('id');
+      expect(result.user).toHaveProperty('email');
+      expect(result.user).toHaveProperty('name');
     });
   });
 
@@ -125,12 +141,12 @@ describe('AuthController', () => {
     };
 
     /**
-     * WHY: Successful login must return user and organizations
+     * WHY: Successful login must return user
+     * NOTE: Organizations are commented out - will be replaced by filebases
      */
-    it('should return user and organizations on successful login', async () => {
+    it('should return user on successful login', async () => {
       const serviceResult = {
         user: { id: 'user-1', email: 'test@example.com', name: 'Test' },
-        organizations: [{ id: 'org-1', name: 'Org', slug: 'org', role: 'admin' }],
         token: 'jwt-token',
       };
       mockAuthService.login.mockResolvedValue(serviceResult);
@@ -139,7 +155,6 @@ describe('AuthController', () => {
 
       expect(result).toEqual({
         user: serviceResult.user,
-        organizations: serviceResult.organizations,
       });
     });
 
@@ -149,7 +164,6 @@ describe('AuthController', () => {
     it('should set auth cookie on login', async () => {
       mockAuthService.login.mockResolvedValue({
         user: { id: '1', email: 'test@example.com', name: 'Test' },
-        organizations: [],
         token: 'login-token',
       });
 
@@ -160,6 +174,20 @@ describe('AuthController', () => {
         'login-token',
         expect.any(Object)
       );
+    });
+
+    /**
+     * WHY: Token should NOT be in response body
+     */
+    it('should not include token in response body', async () => {
+      mockAuthService.login.mockResolvedValue({
+        user: { id: '1', email: 'test@example.com', name: 'Test' },
+        token: 'secret-token',
+      });
+
+      const result = await controller.login(loginDto, mockResponse as Response);
+
+      expect(result).not.toHaveProperty('token');
     });
   });
 
@@ -185,13 +213,14 @@ describe('AuthController', () => {
   describe('me', () => {
     /**
      * WHY: /me endpoint must return current user
+     * NOTE: Organizations are commented out - will be replaced by filebases
      */
     it('should return current user profile', async () => {
       const user = {
         id: 'user-1',
         email: 'test@example.com',
         name: 'Test',
-        organizations: [{ id: 'org-1', name: 'Org', role: 'admin' }],
+        createdAt: new Date(),
       };
       mockAuthService.getCurrentUser.mockResolvedValue(user);
 
@@ -200,6 +229,21 @@ describe('AuthController', () => {
 
       expect(result).toEqual(user);
       expect(mockAuthService.getCurrentUser).toHaveBeenCalledWith('user-1');
+    });
+
+    /**
+     * WHY: User ID must be extracted from JWT payload
+     */
+    it('should extract user ID from JWT sub claim', async () => {
+      mockAuthService.getCurrentUser.mockResolvedValue({
+        id: 'user-xyz',
+        email: 'test@example.com',
+      });
+
+      const mockRequest = { user: { sub: 'user-xyz', email: 'test@example.com' } };
+      await controller.me(mockRequest as any);
+
+      expect(mockAuthService.getCurrentUser).toHaveBeenCalledWith('user-xyz');
     });
   });
 
@@ -212,7 +256,6 @@ describe('AuthController', () => {
 
       mockAuthService.register.mockResolvedValue({
         user: { id: '1', email: 'test@example.com', name: 'Test' },
-        organization: { id: 'org', name: 'Org', slug: 'org' },
         token: 'token',
       });
 
@@ -231,12 +274,36 @@ describe('AuthController', () => {
     });
 
     /**
+     * WHY: In development, cookies should NOT require HTTPS
+     */
+    it('should not set secure cookie when COOKIE_SECURE is false', async () => {
+      mockConfigService.get.mockReturnValue('false');
+
+      mockAuthService.register.mockResolvedValue({
+        user: { id: '1', email: 'test@example.com', name: 'Test' },
+        token: 'token',
+      });
+
+      await controller.register(
+        { email: 'test@example.com', password: 'password123', name: 'Test' },
+        mockResponse as Response
+      );
+
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'token',
+        expect.objectContaining({
+          secure: false,
+        })
+      );
+    });
+
+    /**
      * WHY: Cookie maxAge must match JWT expiry
      */
     it('should set appropriate cookie maxAge', async () => {
       mockAuthService.register.mockResolvedValue({
         user: { id: '1', email: 'test@example.com', name: 'Test' },
-        organization: { id: 'org', name: 'Org', slug: 'org' },
         token: 'token',
       });
 
