@@ -17,6 +17,9 @@ import { LoginDto } from './dto/login.dto';
  * - Passwords are hashed with bcrypt (cost factor 10)
  * - JWT tokens are stored in HttpOnly cookies
  * - Generic error messages prevent user enumeration
+ *
+ * NOTE: Organization/membership logic is commented out for now.
+ * Users can optionally create a filebase after registration.
  */
 @Injectable()
 export class AuthService {
@@ -29,7 +32,7 @@ export class AuthService {
   /**
    * Register a new user
    *
-   * Creates user, organization, and admin membership in a single transaction.
+   * Creates user only - filebase creation is handled separately.
    */
   async register(dto: RegisterDto) {
     // Check if email already exists
@@ -46,27 +49,30 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // Generate organization slug from email
-    const slug = this.generateSlug(dto.email);
-
-    // Check if organization slug exists
-    const existingOrg = await this.db
-      .select()
-      .from(schema.organizations)
-      .where(eq(schema.organizations.slug, slug))
-      .limit(1);
-
-    const orgSlug = existingOrg.length > 0 ? `${slug}-${Date.now()}` : slug;
-    const orgName = dto.organizationName || `${dto.name}'s Organization`;
-
-    // Create organization
-    const [organization] = await this.db
-      .insert(schema.organizations)
-      .values({
-        name: orgName,
-        slug: orgSlug,
-      })
-      .returning();
+    // NOTE: Organization creation is commented out for now
+    // Users can create a filebase after registration
+    // -----------------------------------------------
+    // // Generate organization slug from email
+    // const slug = this.generateSlug(dto.email);
+    //
+    // // Check if organization slug exists
+    // const existingOrg = await this.db
+    //   .select()
+    //   .from(schema.organizations)
+    //   .where(eq(schema.organizations.slug, slug))
+    //   .limit(1);
+    //
+    // const orgSlug = existingOrg.length > 0 ? `${slug}-${Date.now()}` : slug;
+    // const orgName = dto.organizationName || `${dto.name}'s Organization`;
+    //
+    // // Create organization
+    // const [organization] = await this.db
+    //   .insert(schema.organizations)
+    //   .values({
+    //     name: orgName,
+    //     slug: orgSlug,
+    //   })
+    //   .returning();
 
     // Create user
     const [user] = await this.db
@@ -78,12 +84,14 @@ export class AuthService {
       })
       .returning();
 
-    // Create admin membership
-    await this.db.insert(schema.memberships).values({
-      userId: user.id,
-      organizationId: organization.id,
-      role: 'admin',
-    });
+    // NOTE: Membership creation is commented out for now
+    // -----------------------------------------------
+    // // Create admin membership
+    // await this.db.insert(schema.memberships).values({
+    //   userId: user.id,
+    //   organizationId: organization.id,
+    //   role: 'admin',
+    // });
 
     // Generate JWT token
     const token = this.generateToken(user.id, user.email);
@@ -94,11 +102,12 @@ export class AuthService {
         email: user.email,
         name: user.name,
       },
-      organization: {
-        id: organization.id,
-        name: organization.name,
-        slug: organization.slug,
-      },
+      // NOTE: Organization is commented out - will be replaced by filebase
+      // organization: {
+      //   id: organization.id,
+      //   name: organization.name,
+      //   slug: organization.slug,
+      // },
       token,
     };
   }
@@ -128,18 +137,21 @@ export class AuthService {
       throw new InvalidCredentialsException({ email: dto.email });
     }
 
-    // Get user's organizations
-    const userMemberships = await this.db
-      .select({
-        organization: schema.organizations,
-        role: schema.memberships.role,
-      })
-      .from(schema.memberships)
-      .innerJoin(
-        schema.organizations,
-        eq(schema.memberships.organizationId, schema.organizations.id)
-      )
-      .where(eq(schema.memberships.userId, user.id));
+    // NOTE: Organization/membership queries are commented out for now
+    // Will be replaced by filebase queries
+    // -----------------------------------------------
+    // // Get user's organizations
+    // const userMemberships = await this.db
+    //   .select({
+    //     organization: schema.organizations,
+    //     role: schema.memberships.role,
+    //   })
+    //   .from(schema.memberships)
+    //   .innerJoin(
+    //     schema.organizations,
+    //     eq(schema.memberships.organizationId, schema.organizations.id)
+    //   )
+    //   .where(eq(schema.memberships.userId, user.id));
 
     // Generate JWT token
     const token = this.generateToken(user.id, user.email);
@@ -150,12 +162,13 @@ export class AuthService {
         email: user.email,
         name: user.name,
       },
-      organizations: userMemberships.map((m) => ({
-        id: m.organization.id,
-        name: m.organization.name,
-        slug: m.organization.slug,
-        role: m.role,
-      })),
+      // NOTE: Organizations are commented out - will be replaced by filebases
+      // organizations: userMemberships.map((m) => ({
+      //   id: m.organization.id,
+      //   name: m.organization.name,
+      //   slug: m.organization.slug,
+      //   role: m.role,
+      // })),
       token,
     };
   }
@@ -179,27 +192,31 @@ export class AuthService {
       throw new NotFoundException('User', userId);
     }
 
-    // Get user's organizations
-    const userMemberships = await this.db
-      .select({
-        organization: schema.organizations,
-        role: schema.memberships.role,
-      })
-      .from(schema.memberships)
-      .innerJoin(
-        schema.organizations,
-        eq(schema.memberships.organizationId, schema.organizations.id)
-      )
-      .where(eq(schema.memberships.userId, user.id));
+    // NOTE: Organization/membership queries are commented out for now
+    // Will be replaced by filebase queries
+    // -----------------------------------------------
+    // // Get user's organizations
+    // const userMemberships = await this.db
+    //   .select({
+    //     organization: schema.organizations,
+    //     role: schema.memberships.role,
+    //   })
+    //   .from(schema.memberships)
+    //   .innerJoin(
+    //     schema.organizations,
+    //     eq(schema.memberships.organizationId, schema.organizations.id)
+    //   )
+    //   .where(eq(schema.memberships.userId, user.id));
 
     return {
       ...user,
-      organizations: userMemberships.map((m) => ({
-        id: m.organization.id,
-        name: m.organization.name,
-        slug: m.organization.slug,
-        role: m.role,
-      })),
+      // NOTE: Organizations are commented out - will be replaced by filebases
+      // organizations: userMemberships.map((m) => ({
+      //   id: m.organization.id,
+      //   name: m.organization.name,
+      //   slug: m.organization.slug,
+      //   role: m.role,
+      // })),
     };
   }
 
@@ -215,6 +232,8 @@ export class AuthService {
 
   /**
    * Generate URL-friendly slug from email
+   *
+   * NOTE: Kept for future filebase slug generation
    */
   private generateSlug(email: string): string {
     return email
