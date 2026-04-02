@@ -1,8 +1,8 @@
 const config = {
   title: 'BasePillar Docs',
   tagline: 'API and platform documentation',
-  url: 'http://localhost:3001',
-  baseUrl: '/',
+  url: 'http://localhost',
+  baseUrl: '/docs/',
   trailingSlash: false,
   onBrokenLinks: 'throw',
   markdown: {
@@ -31,27 +31,7 @@ const config = {
     ],
   ],
 
-  plugins: [
-    [
-      'docusaurus-plugin-openapi-docs',
-      {
-        id: 'api',
-        docsPluginId: 'classic',
-        config: {
-          api: {
-            specPath: 'openapi/openapi.json',
-            outputDir: 'docs/api',
-            sidebarOptions: {
-              groupPathsBy: 'tag',
-              categoryLinkSource: 'tag',
-            },
-          },
-        },
-      },
-    ],
-  ],
-
-  themes: ['docusaurus-theme-openapi-docs'],
+  plugins: [require.resolve('./plugins/webpack-hmr-fix')],
 };
 
 module.exports = config;
