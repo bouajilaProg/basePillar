@@ -62,20 +62,6 @@ const response = await fetch('/api/filebases', {
 });
 ```
 
-### Inviting Members
-
-```typescript
-const response = await fetch('/api/filebases/:id/members', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  credentials: 'include',
-  body: JSON.stringify({
-    email: 'collaborator@example.com',
-    role: 'editor',
-  }),
-});
-```
-
 ## Running Seeds
 
 ```bash
