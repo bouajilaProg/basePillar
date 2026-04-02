@@ -1,66 +1,45 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "**/.env.*local",
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env.*local", "**/.env"],
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**",
-        ".next/**",
-        "!.next/cache/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "test": {
-      "dependsOn": [
-        "@repo/types#build",
-        "^build"
-      ],
+      "dependsOn": ["@repo/types#build", "^build"],
       "cache": false
     },
     "test:coverage": {
-      "dependsOn": [
-        "@repo/types#build",
-        "^build"
-      ],
+      "dependsOn": ["@repo/types#build", "^build"],
       "cache": false
     },
     "lint": {
-      "dependsOn": [
-        "@repo/types#build",
-        "^build"
-      ]
+      "dependsOn": ["@repo/types#build", "^build"]
     },
     "clean": {
       "cache": false
     },
     "api#build": {
-      "dependsOn": [
-        "@repo/types#build",
-        "^build"
-      ]
+      "dependsOn": ["@repo/types#build", "^build"]
     },
     "api#dev": {
       "cache": false,
       "persistent": true
     },
     "frontend#build": {
-      "dependsOn": [
-        "api#build",
-        "@repo/types#build",
-        "^build"
-      ]
+      "dependsOn": ["api#build", "@repo/types#build", "^build"]
     },
     "frontend#dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "docs#dev": {
       "cache": false,
       "persistent": true
     }

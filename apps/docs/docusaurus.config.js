@@ -1,8 +1,13 @@
+// GitHub Pages config: set via env or default to local dev
+const isGHPages = process.env.DEPLOY_TARGET === 'gh-pages';
+const ghOrg = process.env.GH_ORG || 'basepillar';
+const ghRepo = process.env.GH_REPO || 'basepillar';
+
 const config = {
   title: 'BasePillar Docs',
   tagline: 'API and platform documentation',
-  url: 'http://localhost',
-  baseUrl: '/docs/',
+  url: isGHPages ? `https://${ghOrg}.github.io` : 'http://localhost',
+  baseUrl: isGHPages ? `/${ghRepo}/` : '/docs/',
   trailingSlash: false,
   onBrokenLinks: 'throw',
   markdown: {
@@ -12,8 +17,8 @@ const config = {
   },
   favicon: 'img/favicon.ico',
 
-  organizationName: 'basepillar',
-  projectName: 'basepillar',
+  organizationName: ghOrg,
+  projectName: ghRepo,
 
   presets: [
     [
@@ -88,8 +93,14 @@ const config = {
           label: 'Observe',
         },
         {
-          href: 'http://localhost:4000',
+          type: 'doc',
+          docId: 'console',
+          position: 'left',
           label: 'Console',
+        },
+        {
+          href: 'http://localhost:3000/api/docs',
+          label: 'Swagger',
           position: 'right',
         },
       ],
