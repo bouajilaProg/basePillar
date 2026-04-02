@@ -1,15 +1,17 @@
 ---
-title: Live Observation
+title: Observability (Logging)
 sidebar_position: 1
 ---
 
-# Live Observation
+# Observability (Logging)
 
 Real-time system monitoring and log streaming.
 
 ## Console Service
 
 BasePillar includes a centralized logging console at `apps/console` that aggregates logs from all services.
+
+For UI details, see the dedicated Console page: [Console](/console).
 
 ### Accessing the Console
 

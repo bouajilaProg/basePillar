@@ -28,7 +28,7 @@
     "db:studio": "pnpm --filter api db:studio",
     "docs:dev": "pnpm --filter docs dev",
     "docs:build": "pnpm --filter docs build",
-    "docs:deploy": "pnpm --filter docs build:gh-pages && gh-pages -d apps/docs/build -t true",
+    "docs:deploy": "pnpm --filter docs build:gh-pages && gh-pages -d apps/docs/build --dotfiles",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {

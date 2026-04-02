@@ -6,25 +6,31 @@ slug: /
 
 # BasePillar Documentation
 
-Welcome to the BasePillar developer control plane. This documentation is organized into three pillars:
+Welcome to the BasePillar developer control plane. This documentation is organized into a few parts:
 
-## 🔍 Exploration (API Reference)
+## API Reference
 
 Interactive API documentation generated from OpenAPI specifications. Browse endpoints, view request/response schemas, and test API calls directly.
 
 [Go to API Reference →](/exploration)
 
-## 📋 Context (System State)
+## Getting Started
 
 Understand the system's initial state, environment configuration, database schema, and seed data patterns for development and testing.
 
-[Go to System Context →](/context)
+[Go to Getting Started →](/context)
 
-## 👁️ Observation (Live Monitoring)
+## Observability (Logging)
 
 Real-time log streaming and system monitoring. Watch logs from all services in a terminal-like interface.
 
-[Go to Live Observation →](/observation)
+[Go to Observability →](/observation)
+
+## Manual Testing
+
+Step-by-step manual verification flows for common user journeys.
+
+[Go to Manual Testing →](/manual-testing)
 
 ---
 

@@ -1,15 +1,15 @@
 ---
-title: System Context
+title: Getting Started
 sidebar_position: 1
 ---
 
-# System Context
+# Getting Started
 
-Understanding the initial state, environment configuration, and data structures.
+Set up the repo locally and understand the essentials: configuration, database schema, and seed data.
 
-## Purpose
+## What You Get Here
 
-This section provides essential context for developers working with BasePillar:
+This section provides essentials for developers working with BasePillar:
 
 - **Environment Setup** - How to configure and run the system locally
 - **Database Schema** - Current table structures and relationships
