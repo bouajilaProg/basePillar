@@ -1,20 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: #0b1220;
-    --foreground: #e5e7eb;
-    --primary: #1d4ed8;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --primary: #2563eb;
     --primary-foreground: #ffffff;
-    --muted: #1f2937;
-    --muted-foreground: #9ca3af;
-    --border: #1f2937;
-    --card: #111827;
+    --muted: #18181b;
+    --muted-foreground: #a1a1aa;
+    --border: rgba(255, 255, 255, 0.08);
+    --card: #09090b;
   }
 }
 
 body {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
 }
