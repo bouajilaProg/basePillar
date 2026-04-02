@@ -1,7 +1,7 @@
 // GitHub Pages config: set via env or default to local dev
 const isGHPages = process.env.DEPLOY_TARGET === 'gh-pages';
-const ghOrg = process.env.GH_ORG || 'basepillar';
-const ghRepo = process.env.GH_REPO || 'basepillar';
+const ghOrg = process.env.GH_ORG || 'bouajilaProg';
+const ghRepo = process.env.GH_REPO || 'basePillar';
 
 const config = {
   title: 'BasePillar Docs',
