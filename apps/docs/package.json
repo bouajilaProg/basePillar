@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development pnpm exec docusaurus start --port 3001",
+    "dev": "pnpm exec docusaurus start --port 3001",
     "build": "pnpm exec docusaurus build",
     "serve": "pnpm exec docusaurus serve --port 3001",
     "clear": "pnpm exec docusaurus clear",
@@ -13,8 +13,8 @@
   "dependencies": {
     "@docusaurus/core": "^3.6.0",
     "@docusaurus/preset-classic": "^3.6.0",
-    "docusaurus-theme-openapi-docs": "^3.0.0",
-    "docusaurus-plugin-openapi-docs": "^3.0.0",
+    "docusaurus-theme-openapi-docs": "^4.7.1",
+    "docusaurus-plugin-openapi-docs": "^4.7.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   }
