@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0b1220;
+    --foreground: #e5e7eb;
+    --primary: #1d4ed8;
+    --primary-foreground: #ffffff;
+    --muted: #1f2937;
+    --muted-foreground: #9ca3af;
+    --border: #1f2937;
+    --card: #111827;
+  }
+}
+
+body {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
