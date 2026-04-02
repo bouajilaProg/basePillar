@@ -32,6 +32,25 @@ const config = {
   ],
 
   plugins: [require.resolve('./plugins/webpack-hmr-fix')],
+
+  themeConfig: {
+    navbar: {
+      title: 'BasePillar',
+      items: [
+        {
+          type: 'doc',
+          docId: 'intro',
+          position: 'left',
+          label: 'Docs',
+        },
+        {
+          href: '/docs/api',
+          label: 'API',
+          position: 'left',
+        },
+      ],
+    },
+  },
 };
 
 module.exports = config;
