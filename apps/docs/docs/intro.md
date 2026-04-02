@@ -37,7 +37,7 @@ pnpm dev
 # Access services
 # - Frontend: http://localhost:5173
 # - API: http://localhost:3000/api
-# - Docs: http://localhost:3001
+# - Docs: http://localhost:3001/docs
 # - Console: http://localhost:4000
 ```
 
