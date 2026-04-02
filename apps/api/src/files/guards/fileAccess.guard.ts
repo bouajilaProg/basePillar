@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { AccessRulesService, Permission } from '../accessRules.service';
 import { FILE_PERMISSION_KEY } from '../constants';
+export { FILE_PERMISSION_KEY } from '../constants';
 
 /**
  * Decorator to set required permission for file/folder access
