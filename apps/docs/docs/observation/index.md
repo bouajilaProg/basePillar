@@ -33,6 +33,12 @@ BasePillar includes a centralized logging console at `apps/console` that aggrega
 }
 ```
 
+### Streaming API
+
+The live terminal uses the Server-Sent Events endpoint below. Each event contains a JSON payload that matches the log format above.
+
+- **Live stream**: `GET http://localhost:4000/logs/stream`
+
 ## Live Terminal
 
 import Terminal from '@site/src/components/Terminal';

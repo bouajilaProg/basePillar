@@ -50,28 +50,30 @@ Most endpoints require authentication. The API uses cookie-based JWT authenticat
 
 ### Filebases
 
-- `GET /filebases` - List filebases the user has access to
-- `POST /filebases` - Create a new filebase (one per user max)
-- `GET /filebases/:id` - Get filebase details
-- `DELETE /filebases/:id` - Delete a filebase
-
-### Filebase Members
-
-- `GET /filebases/:id/members` - List members
-- `POST /filebases/:id/members` - Invite a member
-- `PATCH /filebases/:id/members/:memberId` - Update member role
-- `DELETE /filebases/:id/members/:memberId` - Remove member
+- `POST /filebases` - Create a new filebase
+- `GET /filebases/mine` - Get the current user's filebase
+- `GET /filebases/:filebaseId` - Get filebase details
+- `PATCH /filebases/:filebaseId` - Update filebase name
+- `DELETE /filebases/:filebaseId` - Delete a filebase
+- `GET /filebases/:filebaseId/root` - Get root folder
 
 ### Folders
 
-- `GET /filebases/:id/folders` - List folders
-- `POST /filebases/:id/folders` - Create folder
-- `PATCH /filebases/:id/folders/:folderId` - Update folder
-- `DELETE /filebases/:id/folders/:folderId` - Delete folder
+- `GET /filebases/:filebaseId/folders/:folderId/children` - List child folders
+- `GET /filebases/:filebaseId/folders/:folderId` - Get folder
+- `POST /filebases/:filebaseId/folders` - Create folder
+- `PATCH /filebases/:filebaseId/folders/:folderId` - Rename folder
+- `PATCH /filebases/:filebaseId/folders/:folderId/move` - Move folder
+- `DELETE /filebases/:filebaseId/folders/:folderId` - Delete folder
+- `GET /filebases/:filebaseId/folders/:folderId/path` - Get folder path
 
 ### Files
 
-- `GET /filebases/:id/files` - List files
-- `POST /filebases/:id/files` - Upload file
-- `GET /filebases/:id/files/:fileId` - Get file details
-- `DELETE /filebases/:id/files/:fileId` - Delete file
+- `GET /filebases/:filebaseId/files/folder/:folderId` - List files in folder
+- `GET /filebases/:filebaseId/files/:pointerId` - Get file pointer details
+- `GET /filebases/:filebaseId/files/:pointerId/download` - Get signed download URL
+- `POST /filebases/:filebaseId/files` - Upload file
+- `POST /filebases/:filebaseId/files/:pointerId/shortcut` - Create file shortcut
+- `PATCH /filebases/:filebaseId/files/:pointerId` - Rename file pointer
+- `PATCH /filebases/:filebaseId/files/:pointerId/move` - Move file pointer
+- `DELETE /filebases/:filebaseId/files/:pointerId` - Delete file pointer
