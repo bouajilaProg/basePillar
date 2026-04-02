@@ -55,8 +55,8 @@ const config = {
           label: 'Console',
         },
         {
-          href: '/docs/api',
-          label: 'API',
+          href: 'http://localhost:3000/api/docs',
+          label: 'API (local)',
           position: 'left',
         },
       ],
