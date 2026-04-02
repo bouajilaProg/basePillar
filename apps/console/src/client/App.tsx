@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCcw, Filter } from 'lucide-react';
+import { Pause, Filter, Settings2, Activity } from 'lucide-react';
 import { LogRow } from './components/LogRow';
 import { StoredLog, LogLevel } from './types';
 
@@ -8,7 +8,6 @@ const POLL_INTERVAL = Number(import.meta.env.VITE_POLL_INTERVAL || 3000);
 export default function App() {
   const [logs, setLogs] = useState<StoredLog[]>([]);
   const [isPolling, setIsPolling] = useState(true);
-  const [lastFetched, setLastFetched] = useState<Date>(new Date());
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // Filters
@@ -25,7 +24,6 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         setLogs(data.logs || []);
-        setLastFetched(new Date());
       }
     } catch (err) {
       console.error('Failed to fetch logs:', err);
@@ -50,109 +48,119 @@ export default function App() {
     setExpandedRows(newExpanded);
   };
 
-  // Get unique app names for filter dropdown
   const uniqueApps = [...new Set(logs.map((l) => l.appName))];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <header className="flex-none flex items-center justify-between p-4 border-b border-border bg-card shadow-sm z-10">
-        <div>
-          <h1 className="text-lg font-bold tracking-tight flex items-center gap-2">
-            BasePillar Console
-            <span className="bg-primary/20 text-blue-300 text-xs px-2 py-0.5 rounded-full border border-primary/30">
-              v1.0
-            </span>
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            POST logs to <code className="bg-muted px-1 rounded">/logs</code>
-          </p>
+    <div className="flex flex-col h-screen overflow-hidden bg-background text-foreground selection:bg-primary/30">
+      <header className="flex-none flex items-center justify-between px-6 py-3 border-b border-border bg-background/80 backdrop-blur-md z-20">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded bg-primary/20 flex items-center justify-center border border-primary/30">
+              <Activity className="w-4 h-4 text-blue-400" />
+            </div>
+            <h1 className="text-sm font-semibold tracking-tight">BasePillar Console</h1>
+          </div>
+          <div className="h-4 w-px bg-border"></div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Filter className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <select
+                value={filterApp}
+                onChange={(e) => setFilterApp(e.target.value)}
+                className="bg-panel border border-border rounded shadow-sm pl-8 pr-8 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none hover:bg-muted/50 transition-colors cursor-pointer"
+              >
+                <option value="">All Services</option>
+                {uniqueApps.map((app) => (
+                  <option key={app} value={app}>{app}</option>
+                ))}
+              </select>
+            </div>
+            <div className="relative">
+              <Settings2 className="w-3.5 h-3.5 text-muted-foreground absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <select
+                value={filterLevel}
+                onChange={(e) => setFilterLevel(e.target.value as LogLevel | '')}
+                className="bg-panel border border-border rounded shadow-sm pl-8 pr-8 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none hover:bg-muted/50 transition-colors cursor-pointer"
+              >
+                <option value="">All Levels</option>
+                <option value="debug">Debug</option>
+                <option value="info">Info</option>
+                <option value="warn">Warn</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+            {(filterApp || filterLevel) && (
+              <button
+                onClick={() => {
+                  setFilterApp('');
+                  setFilterLevel('');
+                }}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-xs text-muted-foreground">
-            Last update: {lastFetched.toLocaleTimeString()}
-          </div>
           <button
             onClick={() => setIsPolling(!isPolling)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isPolling ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded border shadow-sm text-xs font-medium transition-all ${
+              isPolling 
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
+                : 'bg-panel border-border text-muted-foreground hover:bg-muted'
+            }`}
           >
-            <RefreshCcw className={`w-4 h-4 ${isPolling ? 'animate-spin' : ''}`} />
-            {isPolling ? 'Polling' : 'Paused'}
+            {isPolling ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Live Status
+              </>
+            ) : (
+              <>
+                <Pause className="w-3 h-3" />
+                Paused
+              </>
+            )}
           </button>
         </div>
       </header>
 
-      {/* Filters */}
-      <div className="flex-none flex items-center gap-4 p-4 border-b border-border bg-card/50">
-        <Filter className="w-4 h-4 text-muted-foreground" />
-        <select
-          value={filterApp}
-          onChange={(e) => setFilterApp(e.target.value)}
-          className="bg-muted border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          <option value="">All Apps</option>
-          {uniqueApps.map((app) => (
-            <option key={app} value={app}>
-              {app}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filterLevel}
-          onChange={(e) => setFilterLevel(e.target.value as LogLevel | '')}
-          className="bg-muted border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        >
-          <option value="">All Levels</option>
-          <option value="debug">Debug</option>
-          <option value="info">Info</option>
-          <option value="warn">Warn</option>
-          <option value="error">Error</option>
-        </select>
-        {(filterApp || filterLevel) && (
-          <button
-            onClick={() => {
-              setFilterApp('');
-              setFilterLevel('');
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
-
-      <main className="flex-1 overflow-auto p-4">
-        <div className="rounded-md border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-muted text-muted-foreground text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
+      <main className="flex-1 overflow-auto relative">
+        <table className="w-full text-left border-collapse table-fixed">
+          <thead className="bg-background/95 backdrop-blur-sm text-muted-foreground text-[11px] uppercase tracking-wider sticky top-0 z-10 border-b border-border shadow-sm">
+            <tr>
+              <th className="px-3 py-2 font-medium w-8"></th>
+              <th className="px-3 py-2 font-medium w-[100px]">Timestamp</th>
+              <th className="px-3 py-2 font-medium w-[140px]">Service</th>
+              <th className="px-3 py-2 font-medium w-[80px]">Level</th>
+              <th className="px-3 py-2 font-medium">Message</th>
+              <th className="px-3 py-2 font-medium w-[60px]"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/50 text-[13px]">
+            {logs.length === 0 ? (
               <tr>
-                <th className="px-4 py-3 font-medium w-8"></th>
-                <th className="px-4 py-3 font-medium">Received</th>
-                <th className="px-4 py-3 font-medium">App</th>
-                <th className="px-4 py-3 font-medium">Level</th>
-                <th className="px-4 py-3 font-medium">Message</th>
+                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-mono text-xs">
+                  No logs found matching criteria.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {logs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    No logs received yet.
-                  </td>
-                </tr>
-              ) : (
-                logs.map((log) => (
-                  <LogRow
-                    key={log.id}
-                    log={log}
-                    isExpanded={expandedRows.has(log.id)}
-                    onToggle={() => toggleRow(log.id)}
-                  />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : (
+              logs.map((log) => (
+                <LogRow
+                  key={log.id}
+                  log={log}
+                  isExpanded={expandedRows.has(log.id)}
+                  onToggle={() => toggleRow(log.id)}
+                />
+              ))
+            )}
+          </tbody>
+        </table>
       </main>
     </div>
   );
