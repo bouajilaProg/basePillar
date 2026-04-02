@@ -1,9 +1,9 @@
 ---
-title: API Exploration
+title: API Reference
 sidebar_position: 1
 ---
 
-# API Exploration
+# API Reference
 
 Interactive API reference generated from OpenAPI specification.
 
