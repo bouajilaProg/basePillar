@@ -44,6 +44,12 @@ const config = {
           label: 'Docs',
         },
         {
+          type: 'doc',
+          docId: 'console',
+          position: 'left',
+          label: 'Console',
+        },
+        {
           href: '/docs/api',
           label: 'API',
           position: 'left',
