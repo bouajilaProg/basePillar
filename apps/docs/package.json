@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "NODE_ENV=development pnpm exec docusaurus clear && NODE_ENV=development pnpm exec docusaurus start --port 3001 --host 0.0.0.0",
     "build": "pnpm exec docusaurus build",
+    "build:gh-pages": "DEPLOY_TARGET=gh-pages pnpm exec docusaurus build",
     "serve": "pnpm exec docusaurus serve --port 3001",
     "clear": "pnpm exec docusaurus clear",
     "openapi:sync": "node ./scripts/sync-openapi.mjs",
