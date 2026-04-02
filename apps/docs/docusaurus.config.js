@@ -31,10 +31,13 @@ const config = {
     ],
   ],
 
-  // OpenAPI plugin disabled due to SSG compatibility issues with Docusaurus 3.9.x
-  // Re-enable when docusaurus-theme-openapi-docs fixes the Redux store SSG issue
-  // See: https://github.com/PaloAltoNetworks/docusaurus-openapi-docs/issues
   plugins: [
+    // Fix HMR WebSocket when accessed through proxy
+    require.resolve('./plugins/webpack-hmr-fix'),
+
+    // OpenAPI plugin disabled due to SSG compatibility issues with Docusaurus 3.9.x
+    // Re-enable when docusaurus-theme-openapi-docs fixes the Redux store SSG issue
+    // See: https://github.com/PaloAltoNetworks/docusaurus-openapi-docs/issues
     // [
     //   'docusaurus-plugin-openapi-docs',
     //   {
