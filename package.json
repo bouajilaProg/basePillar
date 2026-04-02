@@ -7,10 +7,15 @@
     "node": ">=22.0.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["bcrypt", "esbuild", "@nestjs/core"]
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "esbuild",
+      "@nestjs/core"
+    ]
   },
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "turbo dev --filter=!docs",
+    "dev:all": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
     "test:coverage": "turbo test:coverage",
@@ -21,10 +26,14 @@
     "db:migrate": "pnpm --filter api db:migrate",
     "db:seed": "pnpm --filter api db:seed",
     "db:studio": "pnpm --filter api db:studio",
+    "docs:dev": "pnpm --filter docs dev",
+    "docs:build": "pnpm --filter docs build",
+    "docs:deploy": "pnpm --filter docs build:gh-pages && gh-pages -d apps/docs/build -t true",
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "gh-pages": "^6.3.0",
     "prettier": "^3.4.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0",
