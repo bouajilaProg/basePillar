@@ -1,10 +1,8 @@
+import { randomUUID } from 'crypto';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as bcrypt from 'bcrypt';
-import { users } from './schema';
-// NOTE: Organizations and memberships are commented out for now
-// Will be replaced by filebase seeding
-// import { organizations, memberships } from './schema';
+import { users, filebases, folders, files, filePointers } from './schema';
 
 /**
  * Database Seed Script
@@ -13,12 +11,13 @@ import { users } from './schema';
  * Usage: pnpm db:seed
  *
  * Default credentials:
- * - Admin: admin@example.com / password123
- * - User 1: user1@example.com / password123
- * - User 2: user2@example.com / password123
+ * - Alice: alice@test.com / password123
+ * - Bob: bob@test.com / password123
+ * - Charlie: charlie@test.com / password123
  *
- * NOTE: Organization/membership seeding is commented out.
- * Filebase seeding will be added once schema is implemented.
+ * Alice gets a full sample filebase structure.
+ * Bob gets a minimal filebase (root only).
+ * Charlie has no filebase.
  */
 async function seed() {
   const connectionString = process.env.DATABASE_URL;
@@ -34,70 +33,149 @@ async function seed() {
   // Hash the default password
   const passwordHash = await bcrypt.hash('password123', 10);
 
-  // NOTE: Organization creation is commented out for now
-  // -----------------------------------------------
-  // // Create organization
-  // const [org] = await db
-  //   .insert(organizations)
-  //   .values({
-  //     name: 'Acme Corp',
-  //     slug: 'acme-corp',
-  //   })
-  //   .returning();
-  //
-  // console.log('✅ Created organization:', org.name);
+  const createUser = async (email: string, name: string) => {
+    const [user] = await db
+      .insert(users)
+      .values({
+        email,
+        password: passwordHash,
+        name,
+      })
+      .returning();
+    return user;
+  };
 
-  // Create admin user
-  const [admin] = await db
-    .insert(users)
-    .values({
-      email: 'admin@example.com',
-      password: passwordHash,
-      name: 'Admin User',
-    })
-    .returning();
+  const createFilebaseWithRoot = async (ownerId: string, name: string) => {
+    const [filebase] = await db
+      .insert(filebases)
+      .values({
+        ownerId,
+        name,
+      })
+      .returning();
 
-  console.log('✅ Created admin user:', admin.email);
+    const [rootFolder] = await db
+      .insert(folders)
+      .values({
+        filebaseId: filebase.id,
+        name: 'root',
+        parentId: null,
+      })
+      .returning();
 
-  // Create regular users
-  const [user1] = await db
-    .insert(users)
-    .values({
-      email: 'user1@example.com',
-      password: passwordHash,
-      name: 'User One',
-    })
-    .returning();
+    return { filebase, rootFolder };
+  };
 
-  const [user2] = await db
-    .insert(users)
-    .values({
-      email: 'user2@example.com',
-      password: passwordHash,
-      name: 'User Two',
-    })
-    .returning();
+  const createFolder = async (filebaseId: string, parentId: string | null, name: string) => {
+    const [folder] = await db
+      .insert(folders)
+      .values({
+        filebaseId,
+        parentId,
+        name,
+      })
+      .returning();
+    return folder;
+  };
 
-  console.log('✅ Created users:', user1.email, user2.email);
+  const createFileWithPointer = async (params: {
+    filebaseId: string;
+    folderId: string;
+    name: string;
+    mimeType: string;
+    size: number;
+    uploadedBy: string;
+  }) => {
+    const [file] = await db
+      .insert(files)
+      .values({
+        s3Key: `${params.filebaseId}/${randomUUID()}`,
+        mimeType: params.mimeType,
+        size: BigInt(params.size),
+        uploadedBy: params.uploadedBy,
+      })
+      .returning();
 
-  // NOTE: Membership creation is commented out for now
-  // Will be replaced by filebase member seeding
-  // -----------------------------------------------
-  // // Create memberships
-  // await db.insert(memberships).values([
-  //   { userId: admin.id, organizationId: org.id, role: 'admin' },
-  //   { userId: user1.id, organizationId: org.id, role: 'member' },
-  //   { userId: user2.id, organizationId: org.id, role: 'member' },
-  // ]);
-  //
-  // console.log('✅ Created memberships');
+    const [pointer] = await db
+      .insert(filePointers)
+      .values({
+        fileId: file.id,
+        folderId: params.folderId,
+        name: params.name,
+        isShortcut: false,
+      })
+      .returning();
+
+    return { file, pointer };
+  };
+
+  const alice = await createUser('alice@test.com', 'Alice');
+  const bob = await createUser('bob@test.com', 'Bob');
+  const charlie = await createUser('charlie@test.com', 'Charlie');
+
+  console.log('✅ Created users:', alice.email, bob.email, charlie.email);
+
+  const { filebase: aliceFilebase, rootFolder: aliceRoot } = await createFilebaseWithRoot(
+    alice.id,
+    'alice-files'
+  );
+  const { filebase: bobFilebase } = await createFilebaseWithRoot(bob.id, 'bob-files');
+
+  console.log('✅ Created filebases:', aliceFilebase.name, bobFilebase.name);
+
+  const documents = await createFolder(aliceFilebase.id, aliceRoot.id, 'Documents');
+  const images = await createFolder(aliceFilebase.id, aliceRoot.id, 'Images');
+  const screenshots = await createFolder(aliceFilebase.id, images.id, 'Screenshots');
+
+  await createFileWithPointer({
+    filebaseId: aliceFilebase.id,
+    folderId: documents.id,
+    name: 'report.pdf',
+    mimeType: 'application/pdf',
+    size: 245_760,
+    uploadedBy: alice.id,
+  });
+  await createFileWithPointer({
+    filebaseId: aliceFilebase.id,
+    folderId: documents.id,
+    name: 'notes.txt',
+    mimeType: 'text/plain',
+    size: 4_096,
+    uploadedBy: alice.id,
+  });
+  await createFileWithPointer({
+    filebaseId: aliceFilebase.id,
+    folderId: images.id,
+    name: 'photo1.jpg',
+    mimeType: 'image/jpeg',
+    size: 512_000,
+    uploadedBy: alice.id,
+  });
+  await createFileWithPointer({
+    filebaseId: aliceFilebase.id,
+    folderId: screenshots.id,
+    name: 'screen1.png',
+    mimeType: 'image/png',
+    size: 128_000,
+    uploadedBy: alice.id,
+  });
+  await createFileWithPointer({
+    filebaseId: aliceFilebase.id,
+    folderId: aliceRoot.id,
+    name: 'README.txt',
+    mimeType: 'text/plain',
+    size: 2_048,
+    uploadedBy: alice.id,
+  });
+
+  console.log('✅ Seeded sample filebase structure for Alice');
 
   console.log('\n🎉 Seed complete!');
   console.log('\nDefault credentials:');
-  console.log('  Admin: admin@example.com / password123');
-  console.log('  User 1: user1@example.com / password123');
-  console.log('  User 2: user2@example.com / password123');
-  console.log('\nNOTE: Filebase creation is done via API after login.');
+  console.log('  Alice: alice@test.com / password123');
+  console.log('  Bob: bob@test.com / password123');
+  console.log('  Charlie: charlie@test.com / password123');
+  console.log('\nNOTE: Alice and Bob have pre-created filebases.');
 
   await client.end();
   process.exit(0);
