@@ -1,8 +1,8 @@
 const config = {
   title: 'BasePillar Docs',
   tagline: 'API and platform documentation',
-  url: 'http://localhost',
-  baseUrl: '/docs/',
+  url: 'http://localhost:3001',
+  baseUrl: '/',
   trailingSlash: false,
   onBrokenLinks: 'throw',
   markdown: {
