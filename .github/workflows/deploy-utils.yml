@@ -1,0 +1,45 @@
+name: Deploy Utility Services
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  check-and-deploy:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'docs')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: true
+          
+      - name: Build Console PWA
+        run: pnpm --filter console run build
+        
+      - name: Build Docusaurus Docs PWA
+        run: pnpm --filter docs run build
+        
+      # Placeholder for generating Swagger UI static files or starting the API service
+      - name: Build Swagger UI
+        run: echo "Generate Swagger UI static output..."
+        
+      - name: Deploy Services
+        run: |
+          echo "Deploying to production server..."
+          echo "Routing rules applied:"
+          echo " - localhost:3000/console -> apps/console/dist"
+          echo " - localhost:3000/docs -> apps/docs/build"
+          echo " - localhost:3000/docs/api -> Swagger static output"
+          
+          # Actual deployment steps would go here (e.g., rsync, scp, docker push)
