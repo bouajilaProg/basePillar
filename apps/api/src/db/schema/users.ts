@@ -1,6 +1,5 @@
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { memberships } from './memberships';
 
 /**
  * Users Table
@@ -27,9 +26,7 @@ export const users = pgTable('users', {
  *
  * A user can have multiple memberships (belong to multiple organizations).
  */
-export const usersRelations = relations(users, ({ many }) => ({
-  memberships: many(memberships),
-}));
+export const usersRelations = relations(users, () => ({}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
