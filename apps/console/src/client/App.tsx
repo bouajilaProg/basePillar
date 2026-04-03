@@ -69,9 +69,13 @@ export default function App() {
                 onChange={(e) => setFilterApp(e.target.value)}
                 className="bg-panel border border-border rounded shadow-sm pl-8 pr-8 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none hover:bg-muted/50 transition-colors cursor-pointer"
               >
-                <option value="">All Services</option>
+                <option value="" className="bg-[#0f0f11] text-gray-200">
+                  All Services
+                </option>
                 {uniqueApps.map((app) => (
-                  <option key={app} value={app}>{app}</option>
+                  <option key={app} value={app} className="bg-[#0f0f11] text-gray-200">
+                    {app}
+                  </option>
                 ))}
               </select>
             </div>
@@ -82,11 +86,21 @@ export default function App() {
                 onChange={(e) => setFilterLevel(e.target.value as LogLevel | '')}
                 className="bg-panel border border-border rounded shadow-sm pl-8 pr-8 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 appearance-none hover:bg-muted/50 transition-colors cursor-pointer"
               >
-                <option value="">All Levels</option>
-                <option value="debug">Debug</option>
-                <option value="info">Info</option>
-                <option value="warn">Warn</option>
-                <option value="error">Error</option>
+                <option value="" className="bg-[#0f0f11] text-gray-200">
+                  All Levels
+                </option>
+                <option value="debug" className="bg-[#0f0f11] text-gray-200">
+                  Debug
+                </option>
+                <option value="info" className="bg-[#0f0f11] text-gray-200">
+                  Info
+                </option>
+                <option value="warn" className="bg-[#0f0f11] text-gray-200">
+                  Warn
+                </option>
+                <option value="error" className="bg-[#0f0f11] text-gray-200">
+                  Error
+                </option>
               </select>
             </div>
             {(filterApp || filterLevel) && (
@@ -107,8 +121,8 @@ export default function App() {
           <button
             onClick={() => setIsPolling(!isPolling)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded border shadow-sm text-xs font-medium transition-all ${
-              isPolling 
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
+              isPolling
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
                 : 'bg-panel border-border text-muted-foreground hover:bg-muted'
             }`}
           >
@@ -145,7 +159,10 @@ export default function App() {
           <tbody className="divide-y divide-border/50 text-[13px]">
             {logs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground font-mono text-xs">
+                <td
+                  colSpan={6}
+                  className="px-4 py-12 text-center text-muted-foreground font-mono text-xs"
+                >
                   No logs found matching criteria.
                 </td>
               </tr>
