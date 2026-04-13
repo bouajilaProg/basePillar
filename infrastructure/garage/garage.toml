@@ -8,6 +8,10 @@ db_engine = "sqlite"
 
 replication_factor = 1
 
+rpc_secret = "9f36d7a54d1c833fe2ac6df5f52dd8f4eaa8f6020ec7fd5961ed9c3200b91b4b"
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "garage:3901"
+
 [s3_api]
 api_bind_addr = "[::]:3900"
 s3_region = "garage"
