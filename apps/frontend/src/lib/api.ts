@@ -1,15 +1,7 @@
-/**
- * API Client
- *
- * Handles all API requests with consistent error handling.
- * Uses fetch with credentials for cookie-based auth.
- */
+import type { Filebase, FilePointer, Folder, User } from './drive-types';
 
 const API_BASE = '/api';
 
-/**
- * API Error class for structured error handling
- */
 export class ApiError extends Error {
   code: string;
   statusCode: number;
@@ -22,17 +14,18 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Fetch wrapper with error handling
- */
 async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+  const isFormData = options.body instanceof FormData;
+
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    credentials: 'include', // Include cookies
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    credentials: 'include',
+    headers,
   });
 
   const data = await response.json().catch(() => ({}));
@@ -40,63 +33,153 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   if (!response.ok) {
     throw new ApiError(
       data.code || 'UNKNOWN_ERROR',
-      data.message || 'An error occurred',
+      data.message || 'Request failed',
       response.status
     );
   }
 
-  return data;
+  return data as T;
 }
 
-/**
- * Auth API endpoints
- */
+type RegisterPayload = {
+  email: string;
+  password: string;
+  name: string;
+  organizationName?: string;
+};
+
+type LoginPayload = {
+  email: string;
+  password: string;
+};
+
+type AuthResponse = {
+  user: User;
+};
+
+type MeResponse = User;
+
 export const api = {
-  /**
-   * Register a new user
-   */
-  register: (data: {
-    email: string;
-    password: string;
-    name: string;
-    organizationName?: string;
-  }) =>
-    fetchApi<{
-      user: { id: string; email: string; name: string };
-      organization: { id: string; name: string; slug: string };
-    }>('/auth/register', {
+  register: (payload: RegisterPayload) =>
+    fetchApi<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     }),
 
-  /**
-   * Login user
-   */
-  login: (data: { email: string; password: string }) =>
-    fetchApi<{
-      user: { id: string; email: string; name: string };
-      organizations: Array<{ id: string; name: string; slug: string; role: 'admin' | 'member' }>;
-    }>('/auth/login', {
+  login: (payload: LoginPayload) =>
+    fetchApi<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     }),
 
-  /**
-   * Logout user
-   */
   logout: () =>
     fetchApi<{ message: string }>('/auth/logout', {
       method: 'POST',
     }),
 
-  /**
-   * Get current user
-   */
-  me: () =>
-    fetchApi<{
-      id: string;
-      email: string;
-      name: string | null;
-      organizations: Array<{ id: string; name: string; slug: string; role: 'admin' | 'member' }>;
-    }>('/auth/me'),
+  me: () => fetchApi<MeResponse>('/auth/me'),
+
+  createFilebase: (name: string) =>
+    fetchApi<Filebase>('/filebases', {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+
+  getMyFilebase: () => fetchApi<Filebase | null>('/filebases/mine'),
+
+  getFilebaseById: (filebaseId: string) => fetchApi<Filebase>(`/filebases/${filebaseId}`),
+
+  getFilebaseRoot: (filebaseId: string) => fetchApi<Folder>(`/filebases/${filebaseId}/root`),
+
+  updateFilebaseName: (filebaseId: string, name: string) =>
+    fetchApi<Filebase>(`/filebases/${filebaseId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    }),
+
+  deleteFilebase: (filebaseId: string) =>
+    fetchApi<void>(`/filebases/${filebaseId}`, {
+      method: 'DELETE',
+    }),
+
+  listChildFolders: (filebaseId: string, folderId: string) =>
+    fetchApi<Folder[]>(`/filebases/${filebaseId}/folders/${folderId}/children`),
+
+  getFolder: (filebaseId: string, folderId: string) =>
+    fetchApi<Folder>(`/filebases/${filebaseId}/folders/${folderId}`),
+
+  createFolder: (filebaseId: string, name: string, parentId: string | null) =>
+    fetchApi<Folder>(`/filebases/${filebaseId}/folders`, {
+      method: 'POST',
+      body: JSON.stringify({ name, parentId }),
+    }),
+
+  renameFolder: (filebaseId: string, folderId: string, name: string) =>
+    fetchApi<Folder>(`/filebases/${filebaseId}/folders/${folderId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    }),
+
+  moveFolder: (filebaseId: string, folderId: string, parentId: string) =>
+    fetchApi<Folder>(`/filebases/${filebaseId}/folders/${folderId}/move`, {
+      method: 'PATCH',
+      body: JSON.stringify({ parentId }),
+    }),
+
+  deleteFolder: (filebaseId: string, folderId: string) =>
+    fetchApi<void>(`/filebases/${filebaseId}/folders/${folderId}`, {
+      method: 'DELETE',
+    }),
+
+  getFolderPath: (filebaseId: string, folderId: string) =>
+    fetchApi<Folder[]>(`/filebases/${filebaseId}/folders/${folderId}/path`),
+
+  listFilesInFolder: (filebaseId: string, folderId: string) =>
+    fetchApi<FilePointer[]>(`/filebases/${filebaseId}/files/folder/${folderId}`),
+
+  getFilePointer: (filebaseId: string, pointerId: string) =>
+    fetchApi<FilePointer>(`/filebases/${filebaseId}/files/${pointerId}`),
+
+  uploadFile: (filebaseId: string, folderId: string, file: File, name?: string) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folderId', folderId);
+    if (name) formData.append('name', name);
+
+    return fetchApi<{ file: unknown; pointer: FilePointer }>(`/filebases/${filebaseId}/files`, {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  renameFile: (filebaseId: string, pointerId: string, name: string) =>
+    fetchApi<FilePointer>(`/filebases/${filebaseId}/files/${pointerId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    }),
+
+  moveFile: (filebaseId: string, pointerId: string, folderId: string) =>
+    fetchApi<FilePointer>(`/filebases/${filebaseId}/files/${pointerId}/move`, {
+      method: 'PATCH',
+      body: JSON.stringify({ folderId }),
+    }),
+
+  deleteFile: (filebaseId: string, pointerId: string) =>
+    fetchApi<void>(`/filebases/${filebaseId}/files/${pointerId}`, {
+      method: 'DELETE',
+    }),
+
+  createShortcut: (
+    filebaseId: string,
+    sourcePointerId: string,
+    targetFolderId: string,
+    name: string
+  ) =>
+    fetchApi<FilePointer>(`/filebases/${filebaseId}/files/${sourcePointerId}/shortcut`, {
+      method: 'POST',
+      body: JSON.stringify({ targetFolderId, name }),
+    }),
+
+  getDownloadUrl: (filebaseId: string, pointerId: string) =>
+    fetchApi<{ url: string }>(`/filebases/${filebaseId}/files/${pointerId}/download`),
 };
