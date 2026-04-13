@@ -1,0 +1,159 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: basepillar-dev-postgres
+    env_file:
+      - .env.staging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  garage:
+    image: dxflrs/garage:v1.0.0
+    container_name: basepillar-dev-garage
+    volumes:
+      - ./infrastructure/garage/garage.toml:/etc/garage.toml
+      - garage_data:/var/lib/garage/data
+      - garage_meta:/var/lib/garage/meta
+    ports:
+      - '${GARAGE_S3_PORT:-3910}:3900'
+      - '${GARAGE_ADMIN_PORT:-3912}:3902'
+    environment:
+      GARAGE_CONFIG_FILE: /etc/garage.toml
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      network: host
+    container_name: basepillar-dev-api
+    env_file:
+      - .env.staging
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PORT: 3000
+      NODE_ENV: production
+      COOKIE_SECURE: 'false'
+      CENTRALIZED_CONSOLE_URL: http://console:4000
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: garage
+    ports:
+      - '${API_PORT:-3005}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      garage:
+        condition: service_started
+      console:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/docs-json').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    develop:
+      watch:
+        - path: ./apps/api
+          action: rebuild
+        - path: ./packages
+          action: rebuild
+        - path: ./pnpm-lock.yaml
+          action: rebuild
+
+  console:
+    build:
+      context: .
+      dockerfile: apps/console/Dockerfile
+      network: host
+    container_name: basepillar-dev-console
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+    ports:
+      - '${CONSOLE_PORT:-4005}:4000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    develop:
+      watch:
+        - path: ./apps/console
+          action: rebuild
+        - path: ./pnpm-lock.yaml
+          action: rebuild
+
+  docs:
+    build:
+      context: .
+      dockerfile: apps/docs/Dockerfile
+      network: host
+    container_name: basepillar-dev-docs
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    develop:
+      watch:
+        - path: ./apps/docs
+          action: rebuild
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      network: host
+    container_name: basepillar-dev-frontend
+    env_file:
+      - .env.staging
+    ports:
+      - '${FRONTEND_PORT:-8080}:80'
+    depends_on:
+      api:
+        condition: service_healthy
+      docs:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    develop:
+      watch:
+        - path: ./apps/frontend
+          action: rebuild
+        - path: ./packages/ui
+          action: rebuild
+        - path: ./pnpm-lock.yaml
+          action: rebuild
+
+volumes:
+  postgres_data:
+  garage_data:
+  garage_meta:
