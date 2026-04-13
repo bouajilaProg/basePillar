@@ -29,8 +29,8 @@ export function RegisterPage() {
 
     try {
       const response = await api.register({ name, email, password, organizationName });
-      setUser(response.user, [{ ...response.organization, role: 'admin' }]);
-      navigate('/dashboard');
+      setUser(response.user);
+      navigate('/drive');
     } catch (err: any) {
       setError(err.message || 'Registration failed');
     } finally {
@@ -43,9 +43,7 @@ export function RegisterPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your details to get started
-          </p>
+          <p className="text-sm text-muted-foreground">Enter your details to get started</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -93,9 +91,7 @@ export function RegisterPage() {
               required
               disabled={isLoading}
             />
-            <p className="text-xs text-muted-foreground">
-              Must be at least 8 characters
-            </p>
+            <p className="text-xs text-muted-foreground">Must be at least 8 characters</p>
           </div>
 
           <div className="space-y-2">
