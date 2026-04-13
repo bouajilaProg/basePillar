@@ -1,20 +1,18 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     container_name: basepillar-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: basepillar
+      POSTGRES_USER: ${POSTGRES_USER:-basepillar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-BPLR_pg_4rV9m2Kp7Lx3Qw8T}
+      POSTGRES_DB: ${POSTGRES_DB:-basepillar}
     ports:
-      - '5432:5432'
+      - '${POSTGRES_PORT:-5433}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-basepillar}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,27 +20,42 @@ services:
   # NestJS API Backend
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
+      network: host
     container_name: basepillar-api
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/basepillar
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-basepillar}:${POSTGRES_PASSWORD:-BPLR_pg_4rV9m2Kp7Lx3Qw8T}@postgres:5432/${POSTGRES_DB:-basepillar}
+      JWT_SECRET: ${JWT_SECRET:-bplr_jwt_v1_9a7d3f2e6c4b8a1f0d5e9c3b7a2f6d1e4c8b0a3d7f1e5c9b2a6d0f4e8b1c5a}
       JWT_EXPIRES_IN: 7d
       PORT: 3000
       NODE_ENV: production
       COOKIE_SECURE: 'true'
       FRONTEND_URL: http://localhost
       CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL:-http://console:4000}
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: garage
+      S3_BUCKET: ${S3_BUCKET:-basepillar-storage}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-BPSTAGEACCESSKEY01}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-bplr_s3_secret_7f4c1a9d2e8b5f0c3a6d9e2b7f4c1a9d2e8b5f0c}
     ports:
-      - '3000:3000'
+      - '${API_PORT:-3005}:3000'
     depends_on:
       postgres:
         condition: service_healthy
       console:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:3000/api/docs-json').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -50,35 +63,71 @@ services:
   # Vite Frontend (Nginx)
   frontend:
     build:
-      context: ./apps/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      network: host
     container_name: basepillar-frontend
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     ports:
-      - '80:80'
+      - '${FRONTEND_PORT:-8080}:80'
     depends_on:
-      - api
-      - docs
+      api:
+        condition: service_healthy
+      docs:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Docusaurus Docs
   docs:
     build:
-      context: ./apps/docs
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/docs/Dockerfile
+      network: host
     container_name: basepillar-docs
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1 || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Centralized Logs Console
   console:
     build:
       context: .
       dockerfile: apps/console/Dockerfile
+      network: host
     container_name: basepillar-console
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       PORT: 4000
       NODE_ENV: production
     ports:
-      - '4000:4000'
+      - '${CONSOLE_PORT:-4005}:4000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:4000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Garage S3-compatible Storage
   garage:
@@ -89,8 +138,8 @@ services:
       - garage_data:/var/lib/garage/data
       - garage_meta:/var/lib/garage/meta
     ports:
-      - '3900:3900' # S3 API
-      - '3902:3902' # Admin API
+      - '${GARAGE_S3_PORT:-3910}:3900'
+      - '${GARAGE_ADMIN_PORT:-3912}:3902'
     environment:
       GARAGE_CONFIG_FILE: /etc/garage.toml
 
