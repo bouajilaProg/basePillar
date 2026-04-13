@@ -1,0 +1,294 @@
+import { useMemo } from 'react';
+import { api, ApiError } from '@/lib/api';
+import { filterDriveItems, formatDate, sortDriveItems, toDriveItems } from '@/lib/drive-utils';
+import { useDriveStore } from '@/stores/drive';
+
+export function useDrive() {
+  const {
+    filebase,
+    currentFolder,
+    breadcrumb,
+    folders,
+    files,
+    sortKey,
+    sortDirection,
+    loading,
+    selected,
+    renameTarget,
+    deleteTarget,
+    shortcutSource,
+    previewFileUrl,
+    uploadBusy,
+    actionBusy,
+    renameDriveOpen,
+    toasts,
+    setFilebase,
+    setCurrentFolder,
+    setBreadcrumb,
+    setFolders,
+    setFiles,
+    setLoading,
+    setSelected,
+    toggleSort,
+    enqueueToast,
+    dismissToast,
+    openRenameModal,
+    openDeleteModal,
+    openShortcutModal,
+    openPreview,
+    setUploadBusy,
+    setActionBusy,
+    setRenameDriveOpen,
+  } = useDriveStore();
+
+  const visibleItems = useMemo(() => {
+    const all = toDriveItems(folders, files);
+    return sortDriveItems(filterDriveItems(all, ''), sortKey, sortDirection);
+  }, [folders, files, sortKey, sortDirection]);
+
+  const loadFolder = async (filebaseId: string, folderId: string) => {
+    setLoading(true);
+    try {
+      const [childrenFolders, filePointers, path, current] = await Promise.all([
+        api.listChildFolders(filebaseId, folderId),
+        api.listFilesInFolder(filebaseId, folderId),
+        api.getFolderPath(filebaseId, folderId),
+        api.getFolder(filebaseId, folderId),
+      ]);
+
+      setFolders(childrenFolders);
+      setFiles(filePointers);
+      setBreadcrumb(path);
+      setCurrentFolder(current ?? path[path.length - 1] ?? null);
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message || 'Failed to load folder', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bootstrapDrive = async (userName: string | null) => {
+    setLoading(true);
+    try {
+      let currentFilebase = await api.getMyFilebase();
+
+      if (!currentFilebase) {
+        const baseName = (userName && userName.trim()) || 'User';
+        currentFilebase = await api.createFilebase(`${baseName}'s Drive`);
+        enqueueToast('Drive created', 'success');
+      }
+
+      setFilebase(currentFilebase);
+      const confirmed = await api.getFilebaseById(currentFilebase.id);
+      setFilebase(confirmed);
+      const root = await api.getFilebaseRoot(currentFilebase.id);
+      await loadFolder(currentFilebase.id, root.id);
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message || 'Failed to initialize drive', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshCurrent = async () => {
+    if (!filebase || !currentFolder) return;
+    await loadFolder(filebase.id, currentFolder.id);
+  };
+
+  const onCreateFolder = async (name: string) => {
+    if (!filebase || !currentFolder) return;
+    setActionBusy(true);
+    try {
+      await api.createFolder(filebase.id, name, currentFolder.id);
+      enqueueToast('Folder created', 'success');
+      await refreshCurrent();
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onUpload = async (file: File) => {
+    if (!filebase || !currentFolder) return;
+    setUploadBusy(true);
+    try {
+      await api.uploadFile(filebase.id, currentFolder.id, file);
+      enqueueToast('File uploaded', 'success');
+      await refreshCurrent();
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setUploadBusy(false);
+    }
+  };
+
+  const onRename = async (name: string) => {
+    if (!filebase || !renameTarget) return;
+    setActionBusy(true);
+    try {
+      if (renameTarget.itemType === 'folder') {
+        await api.renameFolder(filebase.id, renameTarget.itemId, name);
+      } else {
+        await api.renameFile(filebase.id, renameTarget.itemId, name);
+      }
+      openRenameModal(null);
+      enqueueToast('Renamed successfully', 'success');
+      await refreshCurrent();
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!filebase || !deleteTarget) return;
+    setActionBusy(true);
+    try {
+      if (deleteTarget.itemType === 'folder') {
+        await api.deleteFolder(filebase.id, deleteTarget.itemId);
+      } else {
+        await api.deleteFile(filebase.id, deleteTarget.itemId);
+      }
+      openDeleteModal(null);
+      enqueueToast('Deleted successfully', 'success');
+      await refreshCurrent();
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onCreateShortcut = async (targetFolderId: string, name: string) => {
+    if (!filebase || !shortcutSource) return;
+    setActionBusy(true);
+    try {
+      await api.createShortcut(filebase.id, shortcutSource.itemId, targetFolderId, name);
+      openShortcutModal(null);
+      enqueueToast('Shortcut created', 'success');
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onMove = async (itemType: 'folder' | 'file', itemId: string, targetFolderId: string) => {
+    if (!filebase) return;
+    setActionBusy(true);
+    try {
+      if (itemType === 'folder') {
+        await api.moveFolder(filebase.id, itemId, targetFolderId);
+      } else {
+        await api.moveFile(filebase.id, itemId, targetFolderId);
+      }
+      enqueueToast('Moved successfully', 'success');
+      await refreshCurrent();
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onRenameDrive = async (name: string) => {
+    if (!filebase) return;
+    setActionBusy(true);
+    try {
+      const updated = await api.updateFilebaseName(filebase.id, name);
+      setFilebase(updated);
+      setRenameDriveOpen(false);
+      enqueueToast('Drive renamed', 'success');
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const onDeleteDrive = async (userName: string | null) => {
+    if (!filebase) return;
+    setActionBusy(true);
+    try {
+      await api.deleteFilebase(filebase.id);
+      enqueueToast('Drive deleted', 'success');
+      setFilebase(null);
+      setCurrentFolder(null);
+      setFolders([]);
+      setFiles([]);
+      setBreadcrumb([]);
+      await bootstrapDrive(userName);
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const openFilePreview = async (pointerId: string) => {
+    if (!filebase) return;
+    try {
+      await api.getFilePointer(filebase.id, pointerId);
+      const { url } = await api.getDownloadUrl(filebase.id, pointerId);
+      openPreview(url);
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    }
+  };
+
+  return {
+    filebase,
+    currentFolder,
+    breadcrumb,
+    folders,
+    files,
+    visibleItems,
+    sortKey,
+    sortDirection,
+    loading,
+    selected,
+    renameTarget,
+    deleteTarget,
+    shortcutSource,
+    previewFileUrl,
+    uploadBusy,
+    actionBusy,
+    renameDriveOpen,
+    toasts,
+    setSelected,
+    toggleSort,
+    enqueueToast,
+    dismissToast,
+    openRenameModal,
+    openDeleteModal,
+    openShortcutModal,
+    openPreview,
+    setRenameDriveOpen,
+    bootstrapDrive,
+    loadFolder,
+    refreshCurrent,
+    onCreateFolder,
+    onUpload,
+    onRename,
+    onDelete,
+    onCreateShortcut,
+    onMove,
+    onRenameDrive,
+    onDeleteDrive,
+    openFilePreview,
+    formatDate,
+  };
+}
