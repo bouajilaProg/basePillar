@@ -160,4 +160,16 @@ export class FilesController {
   async delete(@Param('pointerId') pointerId: string) {
     return this.fileService.delete(pointerId);
   }
+
+  /**
+   * Duplicate a file
+   */
+  @Post(':pointerId/duplicate')
+  @FilebaseRoles('editor')
+  @ApiOperation({ summary: 'Duplicate a file by pointer Id' })
+  @ApiResponse({ status: 200, description: 'File duplicated' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async duplicate(@Param('pointerId') pointerId: string) {
+    return this.fileService.duplicate(pointerId);
+  }
 }
