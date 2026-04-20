@@ -42,3 +42,5 @@ export class MoveFileDto {
   @IsString()
   folderId: string;
 }
+
+export class DuplicateFileDto {}
