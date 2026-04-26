@@ -6,7 +6,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AccessRulesService, Permission } from '../accessRules.service';
+import { AccessRulesService, Permission } from '../../access-rules/accessRules.service';
 import { FILE_PERMISSION_KEY } from '../constants';
 export { FILE_PERMISSION_KEY } from '../constants';
 
