@@ -12,8 +12,8 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FilebasesService } from './filebases.service';
-import { FilebaseAccessGuard, FilebaseRoles } from './guards/filebaseAccess.guard';
-import { CreateFilebaseDto, UpdateFilebaseDto } from './dto/filebase.dto';
+import { FilebaseAccessGuard, FilebaseRoles } from '../files/guards/filebaseAccess.guard';
+import { CreateFilebaseDto, UpdateFilebaseDto } from '../files/dto/filebase.dto';
 
 /**
  * FilebasesController
