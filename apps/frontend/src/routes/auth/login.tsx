@@ -26,7 +26,7 @@ export function LoginPage() {
     const password = formData.get('password') as string;
 
     try {
-      const response = await api.login({ email, password });
+      const response = await api.auth.login({ email, password });
       setUser(response.user);
       navigate('/drive');
     } catch (err: any) {

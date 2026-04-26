@@ -28,7 +28,7 @@ export function RegisterPage() {
     const organizationName = formData.get('organizationName') as string;
 
     try {
-      const response = await api.register({ name, email, password, organizationName });
+      const response = await api.auth.register({ name, email, password, organizationName });
       setUser(response.user);
       navigate('/drive');
     } catch (err: any) {
