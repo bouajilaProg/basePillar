@@ -3,6 +3,8 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: basepillar-postgres
+    env_file:
+      - .env.staging
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -24,6 +26,8 @@ services:
       dockerfile: apps/api/Dockerfile
       network: host
     container_name: basepillar-api
+    env_file:
+      - .env.staging
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -67,6 +71,8 @@ services:
       dockerfile: apps/frontend/Dockerfile
       network: host
     container_name: basepillar-frontend
+    env_file:
+      - .env.staging
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -90,6 +96,8 @@ services:
       dockerfile: apps/docs/Dockerfile
       network: host
     container_name: basepillar-docs
+    env_file:
+      - .env.staging
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -109,6 +117,8 @@ services:
       dockerfile: apps/console/Dockerfile
       network: host
     container_name: basepillar-console
+    env_file:
+      - .env.staging
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -133,6 +143,8 @@ services:
   garage:
     image: dxflrs/garage:v1.0.0
     container_name: basepillar-garage
+    env_file:
+      - .env.staging
     volumes:
       - ./infrastructure/garage/garage.toml:/etc/garage.toml
       - garage_data:/var/lib/garage/data
