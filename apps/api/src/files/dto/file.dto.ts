@@ -42,3 +42,11 @@ export class MoveFileDto {
   @IsString()
   folderId: string;
 }
+
+export class DuplicateFileDto {}
+
+export class CopyFileDto {
+  @ApiProperty({ example: 'target-folder-uuid' })
+  @IsString()
+  targetFolderId: string;
+}

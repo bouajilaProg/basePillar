@@ -18,7 +18,7 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FileService } from './files.service';
 import { FilebaseAccessGuard, FilebaseRoles } from './guards/filebaseAccess.guard';
-import { UploadFileDto, CreateShortcutDto, RenameFileDto, MoveFileDto } from './dto/file.dto';
+import { UploadFileDto, CreateShortcutDto, RenameFileDto, MoveFileDto, CopyFileDto } from './dto/file.dto';
 
 /**
  * FilesController
@@ -159,5 +159,29 @@ export class FilesController {
   @ApiResponse({ status: 404, description: 'File not found' })
   async delete(@Param('pointerId') pointerId: string) {
     return this.fileService.delete(pointerId);
+  }
+
+  /**
+   * Duplicate a file
+   */
+  @Post(':pointerId/duplicate')
+  @FilebaseRoles('editor')
+  @ApiOperation({ summary: 'Duplicate a file by pointer Id' })
+  @ApiResponse({ status: 200, description: 'File duplicated' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async duplicate(@Param('pointerId') pointerId: string) {
+    return this.fileService.duplicate(pointerId);
+  }
+
+  /**
+   * Copy a file to another folder
+   */
+  @Post(':pointerId/copy')
+  @FilebaseRoles('editor')
+  @ApiOperation({ summary: 'Copy a file to another folder' })
+  @ApiResponse({ status: 200, description: 'File copied' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async copy(@Param('pointerId') pointerId: string, @Body() body: CopyFileDto){
+    return this.fileService.duplicate(pointerId, body.targetFolderId);
   }
 }
