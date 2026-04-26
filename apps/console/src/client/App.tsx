@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pause, Filter, Settings2, Activity } from 'lucide-react';
+import { Pause, Filter, Settings2, Activity, Trash2 } from 'lucide-react';
 import { LogRow } from './components/LogRow';
 import { StoredLog, LogLevel } from './types';
 
@@ -46,6 +46,17 @@ export default function App() {
       newExpanded.add(id);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const clearLogs = async () => {
+    try {
+      const res = await fetch('/logs', { method: 'DELETE' });
+      if (res.ok) {
+        setLogs([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear logs:', err);
+    }
   };
 
   const uniqueApps = [...new Set(logs.map((l) => l.appName))];
@@ -118,6 +129,14 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={clearLogs}
+            className="flex items-center gap-2 px-3 py-1.5 rounded border border-border shadow-sm text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+            title="Clear logs"
+          >
+            <Trash2 className="w-3 h-3" />
+            Clear
+          </button>
           <button
             onClick={() => setIsPolling(!isPolling)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded border shadow-sm text-xs font-medium transition-all ${
