@@ -50,9 +50,11 @@ export class FsService {
   private readonly logger = new Logger(FsService.name);
   private s3Client: S3Client;
   private readonly bucket: string;
+  private readonly publicUrl: string | undefined;
 
   constructor(private readonly configService: ConfigService) {
     this.bucket = this.configService.get<string>('S3_BUCKET') || 'basepillar-storage';
+    this.publicUrl = this.configService.get<string>('S3_PUBLIC_URL');
 
     this.s3Client = new S3Client({
       endpoint: this.configService.get<string>('S3_ENDPOINT'),
@@ -145,9 +147,14 @@ export class FsService {
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: s3Key,
+      ResponseContentDisposition: 'inline',
     });
 
     const url = await getSignedUrl(this.s3Client, command, { expiresIn });
+
+    if (this.publicUrl) {
+      return url.replace(this.configService.get<string>('S3_ENDPOINT') || '', this.publicUrl);
+    }
 
     return url;
   }
