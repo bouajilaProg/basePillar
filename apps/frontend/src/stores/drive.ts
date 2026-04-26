@@ -62,7 +62,7 @@ const initialState = {
   files: [],
   sortKey: 'name' as SortKey,
   sortDirection: 'asc' as SortDirection,
-  loading: false,
+  loading: true,
   selected: null,
   toasts: [],
   renameTarget: null,

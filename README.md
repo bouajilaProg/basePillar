@@ -2,7 +2,16 @@
 
 ## Frontend Drive and Docker Watch
 
-The frontend now exposes a Drive-like workspace at `/drive` and uses backend filebase/folder/file APIs.
+The frontend now exposes a full-screen, responsive Drive-like workspace at `/drive` and uses backend filebase/folder/file APIs.
+
+**Recent Additions:**
+
+- Full-screen fluid layout for sidebar and drive workspace.
+- User profile dropdown with visual initials instead of email text.
+- Manual file search placeholder.
+- Clear logs functionality in the centralized console.
+- S3 inline file previews logic implemented.
+- Styling updates including the `Inter` font, Lucide icons, and fully underlined breadcrumbs.
 
 ### Staging env setup
 
