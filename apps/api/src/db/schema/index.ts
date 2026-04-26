@@ -71,3 +71,6 @@ export {
   type AccessType,
   type Permission,
 } from './accessRules';
+
+// Stars - per-user starred folders in a filebase
+export { stars, starsRelations, type Star, type NewStar } from './stars';
