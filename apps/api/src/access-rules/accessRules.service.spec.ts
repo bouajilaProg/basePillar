@@ -7,7 +7,7 @@ import {
   SubjectType,
 } from './accessRules.service';
 import { DB_CONNECTION } from '../db/db.module';
-import { FoldersService } from './folders.service';
+import { FoldersService } from '../folders/folders.service';
 
 /**
  * AGGRESSIVE TEST SUITE: AccessRulesService

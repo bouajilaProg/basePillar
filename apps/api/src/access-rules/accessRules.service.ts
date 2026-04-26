@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { eq, and } from 'drizzle-orm';
 import { DB_CONNECTION, type Database } from '../db/db.module';
 import * as schema from '../db/schema';
-import { FoldersService } from './folders.service';
+import { FoldersService } from '../folders/folders.service';
 
 /**
  * AccessRulesService
