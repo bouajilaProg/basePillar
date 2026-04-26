@@ -12,9 +12,8 @@ import {
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FoldersService } from './folders.service';
-import { FilebaseAccessGuard, FilebaseRoles } from './guards/filebaseAccess.guard';
-import { FileAccessGuard, RequirePermission } from './guards/fileAccess.guard';
-import { CreateFolderDto, UpdateFolderDto, MoveFolderDto } from './dto/folder.dto';
+import { FilebaseAccessGuard, FilebaseRoles } from '../files/guards/filebaseAccess.guard';
+import { CreateFolderDto, UpdateFolderDto, MoveFolderDto } from '../files/dto/folder.dto';
 
 /**
  * FoldersController
