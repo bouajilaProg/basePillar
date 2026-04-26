@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FileService } from './files.service';
-import { FsService } from './fs.service';
+import { FsService } from '../fs/fs.service';
 import { FileCleanupService } from '../db/triggers/fileCleanup.service';
 import { DB_CONNECTION } from '../db/db.module';
 import { NotFoundException, ConflictException } from '@nestjs/common';
