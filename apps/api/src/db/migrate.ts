@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { loadEnvFiles } from './load-env';
 
 /**
  * Database Migration Script
@@ -9,6 +10,8 @@ import postgres from 'postgres';
  * Usage: pnpm db:migrate
  */
 async function runMigrations() {
+  loadEnvFiles();
+
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error('DATABASE_URL is not defined');

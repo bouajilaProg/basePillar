@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as bcrypt from 'bcrypt';
 import { users, filebases, folders, files, filePointers } from './schema';
+import { loadEnvFiles } from './load-env';
 
 const LOG = {
   info: (msg: string) => console.log(`[INFO] ${msg}`),
@@ -12,6 +13,8 @@ const LOG = {
 };
 
 async function seed() {
+  loadEnvFiles();
+
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error('DATABASE_URL is missing');
 
