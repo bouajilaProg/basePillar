@@ -12,7 +12,7 @@ export function useAuth() {
   const { isLoading, isError } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const data = await api.me();
+      const data = await api.auth.me();
       setUser({ id: data.id, email: data.email, name: data.name });
       return data;
     },
@@ -28,7 +28,7 @@ export function useAuth() {
   }, [isError, isAuthenticated, clearUser]);
 
   const logoutMutation = useMutation({
-    mutationFn: api.logout,
+    mutationFn: api.auth.logout,
     onSuccess: () => {
       clearUser();
       queryClient.clear();

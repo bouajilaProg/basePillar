@@ -50,10 +50,10 @@ export function useDrive() {
     setLoading(true);
     try {
       const [childrenFolders, filePointers, path, current] = await Promise.all([
-        api.listChildFolders(filebaseId, folderId),
-        api.listFilesInFolder(filebaseId, folderId),
-        api.getFolderPath(filebaseId, folderId),
-        api.getFolder(filebaseId, folderId),
+        api.folders.listChildren(filebaseId, folderId),
+        api.files.listInFolder(filebaseId, folderId),
+        api.folders.getPath(filebaseId, folderId),
+        api.folders.get(filebaseId, folderId),
       ]);
 
       setFolders(childrenFolders);
@@ -71,18 +71,18 @@ export function useDrive() {
   const bootstrapDrive = async (userName: string | null) => {
     setLoading(true);
     try {
-      let currentFilebase = await api.getMyFilebase();
+      let currentFilebase = await api.filebases.getMy();
 
       if (!currentFilebase) {
         const baseName = (userName && userName.trim()) || 'User';
-        currentFilebase = await api.createFilebase(`${baseName}'s Drive`);
+        currentFilebase = await api.filebases.create(`${baseName}'s Drive`);
         enqueueToast('Drive created', 'success');
       }
 
       setFilebase(currentFilebase);
-      const confirmed = await api.getFilebaseById(currentFilebase.id);
+      const confirmed = await api.filebases.getById(currentFilebase.id);
       setFilebase(confirmed);
-      const root = await api.getFilebaseRoot(currentFilebase.id);
+      const root = await api.filebases.getRoot(currentFilebase.id);
       await loadFolder(currentFilebase.id, root.id);
     } catch (error) {
       const err = error as ApiError;
@@ -101,7 +101,7 @@ export function useDrive() {
     if (!filebase || !currentFolder) return;
     setActionBusy(true);
     try {
-      await api.createFolder(filebase.id, name, currentFolder.id);
+      await api.folders.create(filebase.id, name, currentFolder.id);
       enqueueToast('Folder created', 'success');
       await refreshCurrent();
     } catch (error) {
@@ -116,7 +116,7 @@ export function useDrive() {
     if (!filebase || !currentFolder) return;
     setUploadBusy(true);
     try {
-      await api.uploadFile(filebase.id, currentFolder.id, file);
+      await api.files.upload(filebase.id, currentFolder.id, file);
       enqueueToast('File uploaded', 'success');
       await refreshCurrent();
     } catch (error) {
@@ -132,9 +132,9 @@ export function useDrive() {
     setActionBusy(true);
     try {
       if (renameTarget.itemType === 'folder') {
-        await api.renameFolder(filebase.id, renameTarget.itemId, name);
+        await api.folders.rename(filebase.id, renameTarget.itemId, name);
       } else {
-        await api.renameFile(filebase.id, renameTarget.itemId, name);
+        await api.files.rename(filebase.id, renameTarget.itemId, name);
       }
       openRenameModal(null);
       enqueueToast('Renamed successfully', 'success');
@@ -152,9 +152,9 @@ export function useDrive() {
     setActionBusy(true);
     try {
       if (deleteTarget.itemType === 'folder') {
-        await api.deleteFolder(filebase.id, deleteTarget.itemId);
+        await api.folders.delete(filebase.id, deleteTarget.itemId);
       } else {
-        await api.deleteFile(filebase.id, deleteTarget.itemId);
+        await api.files.delete(filebase.id, deleteTarget.itemId);
       }
       openDeleteModal(null);
       enqueueToast('Deleted successfully', 'success');
@@ -171,7 +171,7 @@ export function useDrive() {
     if (!filebase || !shortcutSource) return;
     setActionBusy(true);
     try {
-      await api.createShortcut(filebase.id, shortcutSource.itemId, targetFolderId, name);
+      await api.files.createShortcut(filebase.id, shortcutSource.itemId, targetFolderId, name);
       openShortcutModal(null);
       enqueueToast('Shortcut created', 'success');
     } catch (error) {
@@ -187,9 +187,9 @@ export function useDrive() {
     setActionBusy(true);
     try {
       if (itemType === 'folder') {
-        await api.moveFolder(filebase.id, itemId, targetFolderId);
+        await api.folders.move(filebase.id, itemId, targetFolderId);
       } else {
-        await api.moveFile(filebase.id, itemId, targetFolderId);
+        await api.files.move(filebase.id, itemId, targetFolderId);
       }
       enqueueToast('Moved successfully', 'success');
       await refreshCurrent();
@@ -205,7 +205,7 @@ export function useDrive() {
     if (!filebase) return;
     setActionBusy(true);
     try {
-      const updated = await api.updateFilebaseName(filebase.id, name);
+      const updated = await api.filebases.updateName(filebase.id, name);
       setFilebase(updated);
       setRenameDriveOpen(false);
       enqueueToast('Drive renamed', 'success');
@@ -221,7 +221,7 @@ export function useDrive() {
     if (!filebase) return;
     setActionBusy(true);
     try {
-      await api.deleteFilebase(filebase.id);
+      await api.filebases.delete(filebase.id);
       enqueueToast('Drive deleted', 'success');
       setFilebase(null);
       setCurrentFolder(null);
@@ -240,8 +240,8 @@ export function useDrive() {
   const openFilePreview = async (pointerId: string) => {
     if (!filebase) return;
     try {
-      await api.getFilePointer(filebase.id, pointerId);
-      const { url } = await api.getDownloadUrl(filebase.id, pointerId);
+      await api.files.getPointer(filebase.id, pointerId);
+      const { url } = await api.files.getDownloadUrl(filebase.id, pointerId);
       openPreview(url);
     } catch (error) {
       const err = error as ApiError;
