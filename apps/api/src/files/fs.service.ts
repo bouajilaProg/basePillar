@@ -5,6 +5,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
@@ -207,5 +208,27 @@ export class FsService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Duplicate a file in S3
+   * 
+   * @param s3key - The s3 key of the file to duplicate
+   * @param filebaseId - The filebase id for the file to duplicate
+   */
+  async duplicate(s3key: string, filebaseId: string): Promise<string> {
+    // Generate a unique S3 key for the duplicated file
+    const uuid = randomUUID();
+    const duplicatedFileS3Key = `${filebaseId}/${uuid}`;
+
+    const command = new CopyObjectCommand({
+      Bucket: this.bucket,
+      CopySource: `${this.bucket}/${s3key}`,
+      Key: duplicatedFileS3Key,
+    });
+
+    await this.s3Client.send(command);
+
+    return duplicatedFileS3Key;
   }
 }
