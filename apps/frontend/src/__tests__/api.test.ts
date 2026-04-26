@@ -15,7 +15,7 @@ describe('api client', () => {
       json: async () => ({ user: { id: 'u1', email: 'a@b.com', name: 'Alex' } }),
     });
 
-    await api.register({ email: 'a@b.com', password: 'password123', name: 'Alex' });
+    await api.auth.register({ email: 'a@b.com', password: 'password123', name: 'Alex' });
 
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/auth/register',
@@ -49,8 +49,8 @@ describe('api client', () => {
         }),
       });
 
-    const filebase = await api.createFilebase("Alex's Drive");
-    const root = await api.getFilebaseRoot('fb1');
+    const filebase = await api.filebases.create("Alex's Drive");
+    const root = await api.filebases.getRoot('fb1');
 
     expect(filebase.id).toBe('fb1');
     expect(root.id).toBe('root1');
@@ -76,7 +76,7 @@ describe('api client', () => {
       }),
     });
 
-    await api.uploadFile('fb1', 'root1', file);
+    await api.files.upload('fb1', 'root1', file);
 
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/filebases/fb1/files',
@@ -96,6 +96,6 @@ describe('api client', () => {
       }),
     });
 
-    await expect(api.createFolder('fb1', 'Docs', 'root1')).rejects.toBeInstanceOf(ApiError);
+    await expect(api.folders.create('fb1', 'Docs', 'root1')).rejects.toBeInstanceOf(ApiError);
   });
 });
