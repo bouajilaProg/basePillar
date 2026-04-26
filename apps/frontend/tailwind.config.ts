@@ -8,4 +8,13 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
     '../../packages/ui/src/**/*.{js,ts,jsx,tsx}',
   ],
+  theme: {
+    ...baseConfig.theme,
+    extend: {
+      ...baseConfig.theme?.extend,
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
+    },
+  },
 } satisfies Config;
