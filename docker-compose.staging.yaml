@@ -33,7 +33,7 @@ services:
       JWT_EXPIRES_IN: 7d
       PORT: 3000
       NODE_ENV: production
-      COOKIE_SECURE: 'true'
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       FRONTEND_URL: ${FRONTEND_URL}
       CENTRALIZED_CONSOLE_URL: ${CENTRALIZED_CONSOLE_URL}
       S3_ENDPOINT: http://garage:3900
