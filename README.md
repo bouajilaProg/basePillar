@@ -52,3 +52,11 @@ docker compose --env-file .env.staging -f docker-compose.dev-watch.yaml down
 ```bash
 pnpm --filter frontend test
 ```
+
+### Stars API (Swagger/OpenAPI)
+
+Folder stars are user-specific inside each filebase (viewers can star folders too).
+
+- `GET /api/filebases/:filebaseId/stars` - list current user's starred folders
+- `POST /api/filebases/:filebaseId/folders/:folderId/star` - star a folder
+- `DELETE /api/filebases/:filebaseId/folders/:folderId/star` - unstar a folder
