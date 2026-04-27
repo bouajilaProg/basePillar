@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Navigate, Link } from 'react-router';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate, Link, useNavigate } from 'react-router';
 import { Button, Input } from '@repo/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useDrive } from '@/hooks/useDrive';
+import { api } from '@/lib/api';
 import type { DriveItem } from '@/lib/drive-types';
 import {
   CreateFolderModal,
@@ -15,7 +16,6 @@ import { DriveTable } from '@/components/drive/drive-table';
 import { DriveToastStack } from '@/components/drive/drive-toast';
 import { Search, Loader2 } from 'lucide-react';
 
-// Keep your original helper function
 function selectionFromItem(item: DriveItem | null) {
   if (!item) return null;
   return {
@@ -24,21 +24,17 @@ function selectionFromItem(item: DriveItem | null) {
   };
 }
 
-export function DrivePage() {
+export function StarredPage() {
   const { user, isLoading: authLoading, isAuthenticated, logout } = useAuth();
   const drive = useDrive();
+  const navigate = useNavigate();
 
-  // Extract drive properties for easier access (keeps your original naming)
   const {
     filebase,
-    currentFolder,
-    breadcrumb,
-    folders,
     starredFolderIds,
-    visibleItems,
     sortKey,
     sortDirection,
-    loading,
+    loading: driveLoading,
     selected,
     renameTarget,
     deleteTarget,
@@ -48,7 +44,6 @@ export function DrivePage() {
     actionBusy,
     setSelected,
     toggleSort,
-    loadFolder,
     onCreateFolder,
     onUpload,
     onRename,
@@ -70,12 +65,13 @@ export function DrivePage() {
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Search handler you had originally
+  const [starredItems, setStarredItems] = useState<DriveItem[]>([]);
+  const [loadingStars, setLoadingStars] = useState(true);
+
   const handleSearch = () => {
     alert(`Search for: ${searchQuery}`);
   };
 
-  // Dropdown Click-Outside logic
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
@@ -86,18 +82,52 @@ export function DrivePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  /**
-   * STABILIZED BOOTSTRAP
-   * Using user?.id or user?.name as the trigger to prevent infinite loops
-   * if the user object reference changes slightly.
-   */
   useEffect(() => {
     if (isAuthenticated && user && !filebase) {
       void drive.bootstrapDrive(user.name);
     }
   }, [isAuthenticated, user?.name, !!filebase]);
 
-  // All your original name lookup memos
+  useEffect(() => {
+    async function fetchStarred() {
+      if (!filebase) return;
+      setLoadingStars(true);
+      try {
+        const stars = await api.stars.list(filebase.id);
+        const items: DriveItem[] = stars.map(s => ({
+          id: s.id, // Or use folderId? Wait, the table uses folderId for folders
+          type: 'folder',
+          name: s.folderName,
+          updatedAt: s.createdAt, // We can use star's createdAt or folder's updated_at
+          folderId: s.folderId,
+        }));
+        setStarredItems(items);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingStars(false);
+      }
+    }
+    void fetchStarred();
+  }, [filebase, starredFolderIds]); // Re-fetch when starred folders change
+
+  const visibleItems = useMemo(() => {
+    const value = searchQuery.trim().toLowerCase();
+    const filtered = value
+      ? starredItems.filter((item) => item.name.toLowerCase().includes(value))
+      : starredItems;
+    
+    return [...filtered].sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'folder' ? -1 : 1;
+      }
+      if (sortKey === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+    })[sortDirection === 'desc' ? 'reverse' : 'slice']();
+  }, [starredItems, searchQuery, sortKey, sortDirection]);
+
   const selectedName = useMemo(() => {
     if (!selected) return '';
     const found = visibleItems.find(
@@ -142,7 +172,6 @@ export function DrivePage() {
     return found?.name ?? '';
   }, [shortcutSource, visibleItems]);
 
-  // Auth Guard
   if (authLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center text-slate-500 bg-slate-50">
@@ -158,7 +187,6 @@ export function DrivePage() {
     <div className="flex h-dvh flex-col bg-slate-50 overflow-hidden">
       <DriveToastStack />
 
-      {/* HEADER */}
       <header className="relative z-50 shrink-0 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
@@ -199,7 +227,6 @@ export function DrivePage() {
       </header>
 
       <div className="flex flex-1 w-full flex-col md:flex-row gap-2 sm:gap-6 p-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-50">
-        {/* ASIDE */}
         <aside className="flex flex-col w-full md:w-64 shrink-0 bg-transparent py-3 h-full overflow-y-auto">
           <div className="mb-3 space-y-2">
             <Button
@@ -235,13 +262,13 @@ export function DrivePage() {
           <nav className="flex-1 space-y-1 text-sm pt-4">
             <Link
               to="/drive"
-              className="block w-full rounded-lg bg-sky-50 px-3 py-2 text-left text-sky-700"
+              className="block w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100"
             >
               My Drive
             </Link>
             <Link
               to="/starred"
-              className="block w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100"
+              className="block w-full rounded-lg bg-sky-50 px-3 py-2 text-left text-sky-700"
             >
               Starred
             </Link>
@@ -262,28 +289,11 @@ export function DrivePage() {
           </div>
         </aside>
 
-        {/* MAIN */}
         <main className="flex-1 h-full overflow-hidden flex flex-col py-3">
-          {/* Always show Search & Breadcrumbs to avoid layout flicker */}
           <div className="mb-4">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-1 text-sm">
-                {breadcrumb.map((folder, index) => (
-                  <React.Fragment key={folder.id}>
-                    {index > 0 && <span className="text-slate-400">/</span>}
-                    <button
-                      type="button"
-                      onClick={() => filebase && void loadFolder(filebase.id, folder.id)}
-                      className={`px-1 py-0.5 border-b-2 transition-colors ${
-                        index === breadcrumb.length - 1
-                          ? 'border-sky-500 text-sky-700'
-                          : 'border-transparent text-slate-600 hover:border-slate-300'
-                      }`}
-                    >
-                      {folder.name === 'root' ? 'My Drive' : folder.name}
-                    </button>
-                  </React.Fragment>
-                ))}
+                <span className="font-semibold text-slate-800 text-lg">Starred</span>
               </div>
             </div>
 
@@ -294,7 +304,7 @@ export function DrivePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Search drive..."
+                  placeholder="Search starred items..."
                   className="w-full pl-10"
                 />
               </div>
@@ -309,16 +319,15 @@ export function DrivePage() {
             </div>
           </div>
 
-          {/* Table Area Loading Logic */}
           <div className="flex-1 overflow-auto">
-            {loading && !filebase ? (
+            {loadingStars || (!filebase && driveLoading) ? (
               <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 flex flex-col items-center gap-2">
                 <Loader2 className="h-6 w-6 animate-spin text-sky-500" />
-                Loading folder...
+                Loading starred items...
               </div>
             ) : visibleItems.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">
-                Empty folder. Upload a file or create a folder.
+                No starred items yet.
               </div>
             ) : (
               <DriveTable
@@ -327,7 +336,11 @@ export function DrivePage() {
                 onSelect={(item) => setSelected(selectionFromItem(item))}
                 onOpen={(item) => {
                   if (!filebase || item.type !== 'folder') return;
-                  void loadFolder(filebase.id, (item.folderId ?? item.id) as string);
+                  // Navigate to drive and load folder? Wait, DriveTable can just redirect to /drive with the folder selected.
+                  // For now, we can manually change current folder and navigate to /drive.
+                  drive.loadFolder(filebase.id, (item.folderId ?? item.id) as string).then(() => {
+                    navigate('/drive');
+                  });
                 }}
                 onPreview={(item) => {
                   if (item.type !== 'file') return;
@@ -363,7 +376,6 @@ export function DrivePage() {
         </main>
       </div>
 
-      {/* MODALS - Re-linked with your original Name Memos */}
       <CreateFolderModal
         open={createFolderOpen}
         busy={actionBusy}
@@ -393,13 +405,7 @@ export function DrivePage() {
       <ShortcutModal
         open={Boolean(shortcutSource)}
         busy={actionBusy}
-        folders={folders.map((folder) => ({
-          id: folder.id,
-          type: 'folder',
-          name: folder.name,
-          updatedAt: folder.updatedAt,
-          folderId: folder.id,
-        }))}
+        folders={[]}
         defaultName={shortcutTargetName}
         onClose={() => openShortcutModal(null)}
         onCreate={(targetFolderId, name) => void onCreateShortcut(targetFolderId, name)}

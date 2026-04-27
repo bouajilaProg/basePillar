@@ -10,6 +10,7 @@ import { HomePage } from './routes/index';
 import { LoginPage } from './routes/auth/login';
 import { RegisterPage } from './routes/auth/register';
 import { DrivePage } from './routes/drive';
+import { StarredPage } from './routes/starred';
 import { SettingsPage } from './routes/settings';
 import { NotFoundPage } from './routes/not-found';
 import { DebugErrorPage } from './routes/debug/error';
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
               <Route path="register" element={<RegisterPage />} />
             </Route>
             <Route path="drive" element={<DrivePage />} />
+            <Route path="starred" element={<StarredPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="debug">
               <Route path="error" element={<DebugErrorPage />} />
