@@ -20,6 +20,7 @@ type DriveState = {
   breadcrumb: Folder[];
   folders: Folder[];
   files: FilePointer[];
+  starredFolderIds: Set<string>;
   sortKey: SortKey;
   sortDirection: SortDirection;
   loading: boolean;
@@ -37,6 +38,8 @@ type DriveState = {
   setBreadcrumb: (folders: Folder[]) => void;
   setFolders: (folders: Folder[]) => void;
   setFiles: (files: FilePointer[]) => void;
+  setStarredFolderIds: (ids: Set<string>) => void;
+  toggleStarFolder: (folderId: string) => void;
   toggleSort: (key: SortKey) => void;
   setLoading: (loading: boolean) => void;
   setSelected: (selected: Selection | null) => void;
@@ -60,6 +63,7 @@ const initialState = {
   breadcrumb: [],
   folders: [],
   files: [],
+  starredFolderIds: new Set<string>(),
   sortKey: 'name' as SortKey,
   sortDirection: 'asc' as SortDirection,
   loading: true,
@@ -86,6 +90,17 @@ export const useDriveStore = create<DriveState>((set) => ({
   setUploadBusy: (uploadBusy) => set({ uploadBusy }),
   setActionBusy: (actionBusy) => set({ actionBusy }),
   setRenameDriveOpen: (renameDriveOpen) => set({ renameDriveOpen }),
+  setStarredFolderIds: (starredFolderIds) => set({ starredFolderIds }),
+  toggleStarFolder: (folderId) =>
+    set((state) => {
+      const newSet = new Set(state.starredFolderIds);
+      if (newSet.has(folderId)) {
+        newSet.delete(folderId);
+      } else {
+        newSet.add(folderId);
+      }
+      return { starredFolderIds: newSet };
+    }),
   toggleSort: (sortKey) =>
     set((state) => {
       if (state.sortKey !== sortKey) {
@@ -109,5 +124,5 @@ export const useDriveStore = create<DriveState>((set) => ({
   openDeleteModal: (deleteTarget) => set({ deleteTarget }),
   openShortcutModal: (shortcutSource) => set({ shortcutSource }),
   openPreview: (previewFileUrl) => set({ previewFileUrl }),
-  resetDrive: () => set({ ...initialState }),
+  resetDrive: () => set({ ...initialState, starredFolderIds: new Set() }),
 }));

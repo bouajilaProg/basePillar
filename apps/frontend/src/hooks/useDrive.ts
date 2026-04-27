@@ -10,6 +10,7 @@ export function useDrive() {
     breadcrumb,
     folders,
     files,
+    starredFolderIds,
     sortKey,
     sortDirection,
     loading,
@@ -39,6 +40,8 @@ export function useDrive() {
     setUploadBusy,
     setActionBusy,
     setRenameDriveOpen,
+    setStarredFolderIds,
+    toggleStarFolder,
   } = useDriveStore();
 
   const visibleItems = useMemo(() => {
@@ -83,6 +86,10 @@ export function useDrive() {
       const confirmed = await api.filebases.getById(currentFilebase.id);
       setFilebase(confirmed);
       const root = await api.filebases.getRoot(currentFilebase.id);
+
+      const stars = await api.stars.list(currentFilebase.id);
+      setStarredFolderIds(new Set(stars.map((s) => s.folderId)));
+
       await loadFolder(currentFilebase.id, root.id);
     } catch (error) {
       const err = error as ApiError;
@@ -182,6 +189,27 @@ export function useDrive() {
     }
   };
 
+  const onToggleStar = async (folderId: string) => {
+    if (!filebase) return;
+    const isStarred = starredFolderIds.has(folderId);
+    setActionBusy(true);
+    try {
+      if (isStarred) {
+        await api.stars.unstar(filebase.id, folderId);
+        enqueueToast('Folder unstarred', 'success');
+      } else {
+        await api.stars.star(filebase.id, folderId);
+        enqueueToast('Folder starred', 'success');
+      }
+      toggleStarFolder(folderId);
+    } catch (error) {
+      const err = error as ApiError;
+      enqueueToast(err.message, 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   const onMove = async (itemType: 'folder' | 'file', itemId: string, targetFolderId: string) => {
     if (!filebase) return;
     setActionBusy(true);
@@ -255,6 +283,7 @@ export function useDrive() {
     breadcrumb,
     folders,
     files,
+    starredFolderIds,
     visibleItems,
     sortKey,
     sortDirection,
@@ -286,6 +315,7 @@ export function useDrive() {
     onDelete,
     onCreateShortcut,
     onMove,
+    onToggleStar,
     onRenameDrive,
     onDeleteDrive,
     openFilePreview,

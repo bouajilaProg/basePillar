@@ -30,13 +30,38 @@ export function DrivePage() {
 
   // Extract drive properties for easier access (keeps your original naming)
   const {
-    filebase, currentFolder, breadcrumb, folders, visibleItems,
-    sortKey, sortDirection, loading, selected, renameTarget,
-    deleteTarget, shortcutSource, previewFileUrl, uploadBusy,
-    actionBusy, setSelected, toggleSort, loadFolder,
-    onCreateFolder, onUpload, onRename, onDelete,
-    onCreateShortcut, onMove, openRenameModal, openDeleteModal,
-    openShortcutModal, openPreview, openFilePreview, formatDate
+    filebase,
+    currentFolder,
+    breadcrumb,
+    folders,
+    starredFolderIds,
+    visibleItems,
+    sortKey,
+    sortDirection,
+    loading,
+    selected,
+    renameTarget,
+    deleteTarget,
+    shortcutSource,
+    previewFileUrl,
+    uploadBusy,
+    actionBusy,
+    setSelected,
+    toggleSort,
+    loadFolder,
+    onCreateFolder,
+    onUpload,
+    onRename,
+    onDelete,
+    onCreateShortcut,
+    onMove,
+    openRenameModal,
+    openDeleteModal,
+    openShortcutModal,
+    openPreview,
+    openFilePreview,
+    onToggleStar,
+    formatDate,
   } = drive;
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
@@ -63,7 +88,7 @@ export function DrivePage() {
 
   /**
    * STABILIZED BOOTSTRAP
-   * Using user?.id or user?.name as the trigger to prevent infinite loops 
+   * Using user?.id or user?.name as the trigger to prevent infinite loops
    * if the user object reference changes slightly.
    */
   useEffect(() => {
@@ -75,39 +100,55 @@ export function DrivePage() {
   // All your original name lookup memos
   const selectedName = useMemo(() => {
     if (!selected) return '';
-    const found = visibleItems.find(item =>
-      item.id === selected.itemId || item.pointerId === selected.itemId || item.folderId === selected.itemId
+    const found = visibleItems.find(
+      (item) =>
+        item.id === selected.itemId ||
+        item.pointerId === selected.itemId ||
+        item.folderId === selected.itemId
     );
     return found?.name ?? '';
   }, [selected, visibleItems]);
 
   const renameTargetName = useMemo(() => {
     if (!renameTarget) return '';
-    const found = visibleItems.find(item =>
-      item.id === renameTarget.itemId || item.pointerId === renameTarget.itemId || item.folderId === renameTarget.itemId
+    const found = visibleItems.find(
+      (item) =>
+        item.id === renameTarget.itemId ||
+        item.pointerId === renameTarget.itemId ||
+        item.folderId === renameTarget.itemId
     );
     return found?.name ?? '';
   }, [renameTarget, visibleItems]);
 
   const deleteTargetName = useMemo(() => {
     if (!deleteTarget) return '';
-    const found = visibleItems.find(item =>
-      item.id === deleteTarget.itemId || item.pointerId === deleteTarget.itemId || item.folderId === deleteTarget.itemId
+    const found = visibleItems.find(
+      (item) =>
+        item.id === deleteTarget.itemId ||
+        item.pointerId === deleteTarget.itemId ||
+        item.folderId === deleteTarget.itemId
     );
     return found?.name ?? '';
   }, [deleteTarget, visibleItems]);
 
   const shortcutTargetName = useMemo(() => {
     if (!shortcutSource) return '';
-    const found = visibleItems.find(item =>
-      item.id === shortcutSource.itemId || item.pointerId === shortcutSource.itemId || item.folderId === shortcutSource.itemId
+    const found = visibleItems.find(
+      (item) =>
+        item.id === shortcutSource.itemId ||
+        item.pointerId === shortcutSource.itemId ||
+        item.folderId === shortcutSource.itemId
     );
     return found?.name ?? '';
   }, [shortcutSource, visibleItems]);
 
   // Auth Guard
   if (authLoading) {
-    return <div className="flex min-h-dvh items-center justify-center text-slate-500 bg-slate-50">Checking session...</div>;
+    return (
+      <div className="flex min-h-dvh items-center justify-center text-slate-500 bg-slate-50">
+        Checking session...
+      </div>
+    );
   }
   if (!isAuthenticated || !user) {
     return <Navigate to="/auth/login" replace />;
@@ -121,7 +162,9 @@ export function DrivePage() {
       <header className="relative z-50 shrink-0 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold">D</div>
+            <div className="size-8 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold">
+              D
+            </div>
             <div>
               <p className="text-sm font-semibold text-slate-800">Drive</p>
               <p className="text-xs text-slate-500">{filebase?.name ?? 'Connecting...'}</p>
@@ -142,7 +185,11 @@ export function DrivePage() {
                   <p className="text-sm font-medium text-slate-800">{user.name || 'User'}</p>
                   <p className="text-xs text-slate-500 truncate">{user.email}</p>
                 </div>
-                <button type="button" className="w-full rounded px-2 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100" onClick={logout}>
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-100"
+                  onClick={logout}
+                >
                   Sign out
                 </button>
               </div>
@@ -155,10 +202,21 @@ export function DrivePage() {
         {/* ASIDE */}
         <aside className="flex flex-col w-full md:w-64 shrink-0 bg-transparent py-3 h-full overflow-y-auto">
           <div className="mb-3 space-y-2">
-            <Button type="button" className="w-full" onClick={() => setCreateFolderOpen(true)} disabled={actionBusy}>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => setCreateFolderOpen(true)}
+              disabled={actionBusy}
+            >
               New folder
             </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()} disabled={uploadBusy || actionBusy}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadBusy || actionBusy}
+            >
               {uploadBusy ? 'Uploading...' : 'Upload file'}
             </Button>
             <input
@@ -175,12 +233,32 @@ export function DrivePage() {
           </div>
 
           <nav className="flex-1 space-y-1 text-sm pt-4">
-            <button type="button" className="w-full rounded-lg bg-sky-50 px-3 py-2 text-left text-sky-700">My Drive</button>
-            <button type="button" className="w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100">Starred</button>
-            <button type="button" className="w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100">Trash</button>
+            <button
+              type="button"
+              className="w-full rounded-lg bg-sky-50 px-3 py-2 text-left text-sky-700"
+            >
+              My Drive
+            </button>
+            <button
+              type="button"
+              className="w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100"
+            >
+              Starred
+            </button>
+            <button
+              type="button"
+              className="w-full rounded-lg px-3 py-2 text-left text-slate-600 hover:bg-slate-100"
+            >
+              Trash
+            </button>
           </nav>
           <div className="mt-auto pt-4 border-t border-slate-100">
-            <a href="/settings" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-100">Settings</a>
+            <a
+              href="/settings"
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-100"
+            >
+              Settings
+            </a>
           </div>
         </aside>
 
@@ -196,8 +274,11 @@ export function DrivePage() {
                     <button
                       type="button"
                       onClick={() => filebase && void loadFolder(filebase.id, folder.id)}
-                      className={`px-1 py-0.5 border-b-2 transition-colors ${index === breadcrumb.length - 1 ? 'border-sky-500 text-sky-700' : 'border-transparent text-slate-600 hover:border-slate-300'
-                        }`}
+                      className={`px-1 py-0.5 border-b-2 transition-colors ${
+                        index === breadcrumb.length - 1
+                          ? 'border-sky-500 text-sky-700'
+                          : 'border-transparent text-slate-600 hover:border-slate-300'
+                      }`}
                     >
                       {folder.name === 'root' ? 'My Drive' : folder.name}
                     </button>
@@ -217,7 +298,12 @@ export function DrivePage() {
                   className="w-full pl-10"
                 />
               </div>
-              <Button type="button" onClick={handleSearch} disabled={actionBusy} className="shrink-0">
+              <Button
+                type="button"
+                onClick={handleSearch}
+                disabled={actionBusy}
+                className="shrink-0"
+              >
                 Search
               </Button>
             </div>
@@ -254,10 +340,20 @@ export function DrivePage() {
                   if (!targetFolder.folderId) return;
                   const draggedSelection = selectionFromItem(dragged);
                   if (!draggedSelection) return;
-                  void onMove(draggedSelection.itemType, draggedSelection.itemId, targetFolder.folderId);
+                  void onMove(
+                    draggedSelection.itemType,
+                    draggedSelection.itemId,
+                    targetFolder.folderId
+                  );
+                }}
+                onToggleStar={(item) => {
+                  if (item.type !== 'folder') return;
+                  const folderId = item.folderId ?? item.id;
+                  void onToggleStar(folderId);
                 }}
                 formatDate={formatDate}
                 actionBusy={actionBusy}
+                starredFolderIds={starredFolderIds}
                 sortKey={sortKey}
                 sortDirection={sortDirection}
                 onSort={toggleSort}
