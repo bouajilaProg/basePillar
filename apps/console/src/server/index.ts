@@ -117,6 +117,19 @@ app.get('/logs', (req, res) => {
 });
 
 async function startServer() {
+<<<<<<< HEAD
+=======
+  app.delete('/logs', (_req, res) => {
+    logs.length = 0;
+    try {
+      fs.writeFileSync(logsFile, '');
+    } catch (err) {
+      console.error('Failed to clear log file:', err);
+    }
+    return res.status(200).json({ cleared: true });
+  });
+
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
   if (isDev) {
     // Development: Use Vite middleware (portless approach)
     const { createServer: createViteServer } = await import('vite');

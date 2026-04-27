@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { Pause, Filter, Settings2, Activity } from 'lucide-react';
+=======
+import { Pause, Filter, Settings2, Activity, Trash2 } from 'lucide-react';
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
 import { LogRow } from './components/LogRow';
 import { StoredLog, LogLevel } from './types';
 
@@ -48,6 +52,20 @@ export default function App() {
     setExpandedRows(newExpanded);
   };
 
+<<<<<<< HEAD
+=======
+  const clearLogs = async () => {
+    try {
+      const res = await fetch('/logs', { method: 'DELETE' });
+      if (res.ok) {
+        setLogs([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear logs:', err);
+    }
+  };
+
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
   const uniqueApps = [...new Set(logs.map((l) => l.appName))];
 
   return (
@@ -119,6 +137,17 @@ export default function App() {
 
         <div className="flex items-center gap-4">
           <button
+<<<<<<< HEAD
+=======
+            onClick={clearLogs}
+            className="flex items-center gap-2 px-3 py-1.5 rounded border border-border shadow-sm text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+            title="Clear logs"
+          >
+            <Trash2 className="w-3 h-3" />
+            Clear
+          </button>
+          <button
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
             onClick={() => setIsPolling(!isPolling)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded border shadow-sm text-xs font-medium transition-all ${
               isPolling

@@ -1,0 +1,62 @@
+# BasePillar
+
+## Frontend Drive and Docker Watch
+
+The frontend now exposes a full-screen, responsive Drive-like workspace at `/drive` and uses backend filebase/folder/file APIs.
+
+**Recent Additions:**
+
+- Full-screen fluid layout for sidebar and drive workspace.
+- User profile dropdown with visual initials instead of email text.
+- Manual file search placeholder.
+- Clear logs functionality in the centralized console.
+- S3 inline file previews logic implemented.
+- Styling updates including the `Inter` font, Lucide icons, and fully underlined breadcrumbs.
+
+### Staging env setup
+
+1. Copy staging env and customize:
+
+```bash
+cp .env.staging.example .env.staging
+```
+
+2. Start staging stack:
+
+```bash
+docker compose --env-file .env.staging -f docker-compose.staging.yaml up -d --build
+```
+
+3. Access services:
+
+- Frontend: `http://localhost:8080/drive`
+- API docs: `http://localhost:3005/api/docs`
+- Console: `http://localhost:4005`
+
+### Dev watch mode (rebuild on changes)
+
+Runs all services (api, frontend, docs, console, postgres, garage) and rebuilds on file changes.
+
+```bash
+docker compose --env-file .env.staging -f docker-compose.dev-watch.yaml up --watch
+```
+
+Use `Ctrl+C` to stop, then cleanup with:
+
+```bash
+docker compose --env-file .env.staging -f docker-compose.dev-watch.yaml down
+```
+
+### Frontend tests
+
+```bash
+pnpm --filter frontend test
+```
+
+### Stars API (Swagger/OpenAPI)
+
+Folder stars are user-specific inside each filebase (viewers can star folders too).
+
+- `GET /api/filebases/:filebaseId/stars` - list current user's starred folders
+- `POST /api/filebases/:filebaseId/folders/:folderId/star` - star a folder
+- `DELETE /api/filebases/:filebaseId/folders/:folderId/star` - unstar a folder

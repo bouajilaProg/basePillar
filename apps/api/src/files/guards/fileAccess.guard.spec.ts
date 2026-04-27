@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FileAccessGuard, FILE_PERMISSION_KEY } from './fileAccess.guard';
-import { AccessRulesService } from '../accessRules.service';
+import { AccessRulesService } from '../../access-rules/accessRules.service';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 

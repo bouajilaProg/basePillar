@@ -12,15 +12,15 @@ export function HomePage() {
     <div className="flex min-h-dvh flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8 text-center">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">BasePillar</h1>
+          <h1 className="text-4xl font-bold tracking-tight">BasePillar Drive</h1>
           <p className="text-muted-foreground">
-            Full-stack monorepo with Vite, NestJS, and PostgreSQL
+            White mode file workspace with a Google-style flow
           </p>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
           <Button asChild size="lg">
-            <Link to="/auth/login">Sign In</Link>
+            <Link to="/drive">Open Drive</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link to="/auth/register">Create Account</Link>

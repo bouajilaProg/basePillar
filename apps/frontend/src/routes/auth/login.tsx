@@ -26,9 +26,9 @@ export function LoginPage() {
     const password = formData.get('password') as string;
 
     try {
-      const response = await api.login({ email, password });
-      setUser(response.user, response.organizations);
-      navigate('/dashboard');
+      const response = await api.auth.login({ email, password });
+      setUser(response.user);
+      navigate('/drive');
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {
@@ -41,9 +41,7 @@ export function LoginPage() {
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your credentials to sign in
-          </p>
+          <p className="text-sm text-muted-foreground">Enter your credentials to sign in</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

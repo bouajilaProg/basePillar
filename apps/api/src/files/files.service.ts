@@ -2,7 +2,11 @@ import { Injectable, Inject, NotFoundException, ConflictException } from '@nestj
 import { eq, and } from 'drizzle-orm';
 import { DB_CONNECTION, type Database } from '../db/db.module';
 import * as schema from '../db/schema';
+<<<<<<< HEAD
 import { FsService } from './fs.service';
+=======
+import { FsService } from '../fs/fs.service';
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
 import { FileCleanupService } from '../db/triggers/fileCleanup.service';
 
 /**
@@ -349,13 +353,21 @@ export class FileService {
 
   /**
    * Duplicate a file inside its folder
+<<<<<<< HEAD
    * 
+=======
+   *
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
    * @param pointerId - the pointer Id of the file to duplicate
    * @param targetFolderId - the folder Id of the destination folder
    * @returns The new file and pointer created by the duplication
    * @throws NotFoundException if Pointer not found
    */
+<<<<<<< HEAD
   async duplicate(pointerId: string, targetFolderId?: string): Promise<UploadResult>{
+=======
+  async duplicate(pointerId: string, targetFolderId?: string): Promise<UploadResult> {
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
     // Get file by pointer Id
     const [pointer] = await this.db
       .select({
@@ -367,13 +379,17 @@ export class FileService {
         name: schema.filePointers.name,
         folderId: schema.filePointers.folderId,
         filebaseId: schema.folders.filebaseId,
+<<<<<<< HEAD
         
+=======
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
       })
       .from(schema.filePointers)
       .innerJoin(schema.files, eq(schema.filePointers.fileId, schema.files.id))
       .innerJoin(schema.folders, eq(schema.filePointers.folderId, schema.folders.id))
       .where(eq(schema.filePointers.id, pointerId));
 
+<<<<<<< HEAD
       if (!pointer) {
         throw new NotFoundException('File not found');
       }
@@ -446,3 +462,77 @@ export class FileService {
       return result;
   }
 }
+=======
+    if (!pointer) {
+      throw new NotFoundException('File not found');
+    }
+
+    // Duplicate in S3
+    const newS3key = await this.fsService.duplicate(pointer.s3key, pointer.filebaseId);
+
+    // Check if targetFolderId is provided, if not use the same folder as the original file
+    if (!targetFolderId) {
+      targetFolderId = pointer.folderId;
+    }
+
+    //Create file record in DB (for the duplicated file)
+    const result = await this.db.transaction(async (tx) => {
+      const [file] = await tx
+        .insert(schema.files)
+        .values({
+          s3Key: newS3key,
+          mimeType: pointer.mimeType,
+          size: pointer.size,
+          uploadedBy: pointer.uploadedBy,
+        })
+        .returning();
+
+      // Extract the name without the extention
+      let nameWithoutExt = '';
+      let extension = '';
+      const lastDotIndex = pointer.name.lastIndexOf('.');
+
+      if (lastDotIndex !== -1) {
+        nameWithoutExt = pointer.name.substring(0, lastDotIndex);
+        extension = pointer.name.substring(lastDotIndex);
+      }
+      let copies = '_copy';
+      let newName = `${nameWithoutExt}${copies}${extension}`;
+
+      //check for name conflict in the folder
+      while (true) {
+        const [existing] = await tx
+          .select()
+          .from(schema.filePointers)
+          .where(
+            and(
+              eq(schema.filePointers.folderId, targetFolderId),
+              eq(schema.filePointers.name, newName)
+            )
+          );
+        if (existing) {
+          newName = `${nameWithoutExt}${copies}${extension}`;
+          copies += '_copy';
+        } else {
+          break;
+        }
+      }
+
+      // Create pointer for the duplicated file
+      const [newPointer] = await tx
+        .insert(schema.filePointers)
+        .values({
+          fileId: file.id,
+          folderId: targetFolderId,
+          name: newName,
+          isShortcut: false,
+        })
+        .returning();
+
+      return { file, pointer: newPointer };
+    });
+
+    return result;
+  }
+}
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9

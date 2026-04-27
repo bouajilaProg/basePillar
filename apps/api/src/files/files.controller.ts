@@ -93,7 +93,11 @@ export class FilesController {
     @Body() body: UploadFileDto,
     @UploadedFile() file: { buffer: Buffer; originalname: string; mimetype: string }
   ) {
+<<<<<<< HEAD
     return this.fileService.upload({
+=======
+    const result = await this.fileService.upload({
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
       filebaseId,
       folderId: body.folderId,
       name: body.name || file.originalname,
@@ -101,6 +105,17 @@ export class FilesController {
       mimeType: file.mimetype,
       uploadedBy: req.user.sub,
     });
+<<<<<<< HEAD
+=======
+
+    return {
+      file: {
+        ...result.file,
+        size: result.file.size.toString(),
+      },
+      pointer: result.pointer,
+    };
+>>>>>>> 8dba22f3501bf352ea9476e481542473abb48eb9
   }
 
   /**

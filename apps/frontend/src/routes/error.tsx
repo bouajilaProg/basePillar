@@ -13,13 +13,11 @@ export function ErrorPage() {
         <div className="space-y-2">
           <p className="text-sm uppercase tracking-widest text-muted-foreground">Error</p>
           <h1 className="text-3xl font-semibold">Something went wrong</h1>
-          <p className="text-muted-foreground">
-            Please try again or return to the home page.
-          </p>
+          <p className="text-muted-foreground">Please try again or return to the home page.</p>
         </div>
         <div className="flex justify-center">
           <Button asChild>
-            <Link to="/">Back to home</Link>
+            <Link to="/drive">Back to drive</Link>
           </Button>
         </div>
       </div>

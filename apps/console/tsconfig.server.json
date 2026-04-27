@@ -5,6 +5,7 @@
     "moduleResolution": "node",
     "target": "ES2022",
     "lib": ["ES2022"],
+    "tsBuildInfoFile": "../../node_modules/.tmp/console.server.tsbuildinfo",
     "outDir": "./dist/server",
     "rootDir": "./src/server",
     "types": ["node"],
