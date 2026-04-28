@@ -74,6 +74,15 @@ describe('FilePointers Schema', () => {
     });
 
     /**
+     * WHY: Distinguish between active and archived (trashed) pointers 
+     */
+    it('should have isArchived boolean column with default false', () => {
+      const column = filePointers.isArchived;
+      expect(column.notNull).toBe(true);
+      expect(column.hasDefault).toBe(true);
+    });
+
+    /**
      * WHY: Timestamps for audit trail
      */
     it('should have createdAt and updatedAt timestamps', () => {
@@ -106,6 +115,7 @@ describe('FilePointers Schema', () => {
         folderId: '123e4567-e89b-12d3-a456-426614174002',
         name: 'document.pdf',
         isShortcut: false,
+        isArchived: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -125,6 +135,7 @@ describe('FilePointers Schema', () => {
         folderId: '123e4567-e89b-12d3-a456-426614174002',
         name: 'document.pdf',
         // isShortcut has default
+        // isArchived has default
       };
 
       expect(newPointer.fileId).toBeDefined();
@@ -141,11 +152,13 @@ describe('FilePointers Schema', () => {
         folderId: '123e4567-e89b-12d3-a456-426614174002',
         name: 'original.txt',
         isShortcut: false,
+        isArchived: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       expect(original.isShortcut).toBe(false);
+      expect(original.isArchived).toBe(false);
     });
 
     /**
@@ -158,11 +171,13 @@ describe('FilePointers Schema', () => {
         folderId: '123e4567-e89b-12d3-a456-426614174004', // Different folder
         name: 'shortcut-to-original.txt',
         isShortcut: true,
+        isArchived: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
       expect(shortcut.isShortcut).toBe(true);
+      expect(shortcut.isArchived).toBe(false);
     });
   });
 });
